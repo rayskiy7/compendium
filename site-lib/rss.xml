@@ -1,0 +1,1529 @@
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Compendium]]></title><description><![CDATA[Obsidian digital garden]]></description><link>http://github.com/dylang/node-rss</link><image><url>site-lib/media/favicon.png</url><title>Compendium</title><link/></image><generator>Webpage HTML Export plugin for Obsidian</generator><lastBuildDate>Mon, 29 Dec 2025 14:06:50 GMT</lastBuildDate><atom:link href="site-lib/rss.xml" rel="self" type="application/rss+xml"/><pubDate>Mon, 29 Dec 2025 14:06:40 GMT</pubDate><ttl>60</ttl><dc:creator/><item><title><![CDATA[Start page]]></title><description><![CDATA[This is selected collection of my book notes!
+👈🏼 All works can be found in the left side-bar]]></description><link>start-page.html</link><guid isPermaLink="false">engineering/compendium/Start page.md</guid><pubDate>Mon, 29 Dec 2025 14:01:44 GMT</pubDate></item><item><title><![CDATA[TC++PL. Tome 2]]></title><description><![CDATA[Many important things are deemed implementation-defined by the standard. For example:unsigned char c1 = 64; // well defined
+unsigned char c2 = 1256; // implementation-defined, truncation
+Other behaviors are unspecified (e.g., exact value returned by new, or value of a variable assigned to from two threads without synchronization).To maximize portability it is wise to be explicit about implementation-defined provisions. To support such technique, the std lib provides numeric_limits.static_assert(4&lt;=sizeof(int), "sizeof(int) is too small");
+Constructions that is undefined by the standard behave very badly:const int size = 4*1024;
+char page[size];
+void f()
+{ page[size+size] = 7; // undefined, may cause disaster
+}
+Kinds of implementation:
+hosted includes all the stdlib facilities as described in std
+freestanding may provide fewer stdlib facilities, as long as the following are provided:
+<img alt="Screenshot 2025-10-04 at 04.41.40.png" src="a9s/screenshot-2025-10-04-at-04.41.40.png" target="_self" style="width: 600px; max-width: 100%;">
+Freestanding implementation is often used for bare-metal programs.
+Many implementations also provide an option for not using exceptions for really minimal, close-to-the-hardware, programs.
+C++ use 7-bit characters set ASCII (ISO 646-1983, ANSI 3.4-1968).
+Every name (identifier) in C++ has a type!<br>
+<img style="max-width:800px; " class="excalidraw-svg excalidraw-embedded-img excalidraw-canvas-immersive is-unresolved" src="blob:/2e045207-4e61-4d79-96ac-1c98a846b91e" filesource="a9s/2025.10.04.md" w="800" draggable="false" oncanvas="false" target="_self">Booleans are converted to int in expressions (arithmetic and logical):bool b=true;
+cout&lt;&lt;b+5&lt;&lt;endl; // out: 6
+C++ provides a variety of character types:
+char, signed char, unsigned char, wchar_t, char8_t, char16_t, char32_tDanger
+It's not safe to assume that the alphabetic characters are contiguous. If your source file is encoded with EBCDIC the test 'a'&lt;c &amp;&amp; c&lt;'z' may be incorrect.
+Warn
+Remember, that C++ leaves open the possibility of existence one's-complement systems; e.g., where char can has values -127...127 (not -128...127) Reminder: most common characters is in range 0...127
+You cannot cast between pointers to char, unsigned char, signed char — because they are three distinct types.<br><img alt="Screenshot 2025-10-04 at 20.06.24.png" src="a9s/screenshot-2025-10-04-at-20.06.24.png" target="_self" style="width: 500px; max-width: 100%;">It's possible but should be avoided:int c = 'ab'; // a='\0x61' b='\0x62' -&gt; 0x6162 (big-endian) // 0x6261 (little-endian)
+Additional char types literals:wchar_t wc = L'ab'; // implementation-defined :(
+char16_t c16 = u'\uHHHH'; // 4 bytes char
+char32_t c32 = U'\UHHHHHHHH'; // 8 bytes char
+Synonyms:int = signed = signed int
+unsigned = unsigned int
+short = short int
+long = long int
+long long = long long int
+For more detailed integers you can use &lt;cstdint&gt;:
+int64_t — signed int with exactly 64 bits
+uint_fast16_t — 16-bit unsigned int, supposedly the fastest such integer
+int_least32_t — just like plain int
+and others...
+Hex and octal notations sets bits directly and can surprise on some types and machines:// on two's-complement architecture
+int16_t x = 0xffff; // == -1
+int32_t y = 0xffff; // == 65'535
+Type of integer literal deduced in order (to first in which can be represented):1347 -&gt; I -&gt; LI -&gt; LLI
+1347L -&gt; LI -&gt; LLI
+1347LL -&gt; LLI
+0... -&gt; I -&gt; UI -&gt; LI -&gt; ULI -&gt; LLI -&gt; ULLI
+0...L -&gt; LI -&gt; ULI -&gt; LLI -&gt; ULLI
+0...LL -&gt; LLI -&gt; ULLI
+...U -&gt; UI -&gt; ULI -&gt; ULLI
+...UL -&gt; ULI -&gt; ULLI
+...ULL -&gt; ULLI
+Remember about scientific notation: 1.2e10 or 1.23e-15<br><img alt="Screenshot 2025-10-05 at 01.00.15.png" src="a9s/screenshot-2025-10-05-at-01.00.15.png" target="_self" style="width: 600px; max-width: 100%;">you can use delimiter:const char* str = R"x("(hello!)")x"; // "(hello!)"
+// ^ ^ — optional delimiter
+Critically to note!
+Note the dramatic difference in the meaning of u prefix for char u'' and string u""!
+For example, invalid: u'🤣' (doesn't fit into memory), but valid: u"🤣" (stored as 2 code units of char16_t).
+You can define your own suffixes (user-defined literals):KM x = 123_km;
+G s = "hello!"_gr;
+(use names started with _)string literal suffix:
+string s = "hello"s;
+Remember
+You should know C++ is not the implementation. The C++ is the standard!
+Think so and avoid implementation-dependent aspects.
+Tip
+Program you don't want to port today may be ported some day! Compatibility is important!
+It's easier to limit impact of implementation-dependent language feature. Limiting the impact of system-dependent library facilities is far harder. And therefore:Important
+Use std lib wherever feasible!
+Think about your library portability!
+Important
+sizeof(char) == 1 by definition. You may assume it is 1 byte, but on different machines it may differ!
+Guaranteed about sizes:1byte ≡ char ≤ short ≤ int ≤ long ≤ long long
+1byte ≤ bool ≤ long
+char ≤ wchar_t ≤ long
+float ≤ double ≤ long double
+N ≡ signed N ≡ unsigned N char ≥ 8bits
+short ≥ 16bits
+long ≥ 32bits
+To define real values use &lt;limits&gt; (which functions is constexpr) and sizeof.Best practice: avoid conversions that are not value-preserving.alignof(arg); // minimal alignment for correct access in memory // you can also define specific alignment for data
+template&lt;typename T&gt;
+void use(const vector&lt;T&gt;&amp; v)
+{ constexpr int bufmax = 1024; alignas(T) char buffer[bufmax]; // uninitialized const int max_els = min(v.size(), bufmax/sizeof(T)); uninitialized_copy(v.begin(), v.begin() + max_els, (T*)buffer);
+}
+RunNote
+alignas(T) align buffer by alignment of T, i.e. by alignof(T)
+<br>see <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch6/alignment.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch6/alignment.cpp" target="_self">example</a>.The "value" of the following is permanent:
+types, aliases, templates, functions, constantsWith some simplification, declaration has five parts:
+optional prefix specifiers (static, virtual, ...)
+a base type (vector&lt;double&gt;, const int, ...)
+a declarator optionally including a name (p[7], *(*)[], ...)
+optional suffix function specifiers (const, noexcept, ...)
+an optional initializer or function body (={7,5,3}, {return x;},...)
+Note
+declarations are terminated by ; except for functions and namespaces
+<br><img alt="Screenshot 2025-10-05 at 05.47.03.png" src="a9s/screenshot-2025-10-05-at-05.47.03.png" target="_self" style="width: 500px; max-width: 100%;">Crit
+You must not use names: starting with _ in global space
+starting with __ or _C (uppercase) in any space Select descriptive names for large scope symbols and conventional short names for locals.Recommendation
+Use CAPITALIZED names only for macros, not even for constants
+Keywords:<br>
+<img alt="Screenshot 2025-10-05 at 18.26.55.png" src="a9s/screenshot-2025-10-05-at-18.26.55.png" target="_self" style="width: 400px; max-width: 100%;">
+And special meaning identifiers:<br>
+<img alt="Screenshot 2025-10-05 at 18.27.27.png" src="a9s/screenshot-2025-10-05-at-18.27.27.png" target="_self" style="width: 300px; max-width: 100%;">Stroustrup says that names of class scope can't be accessed from other translation units unlike namespace's names that can. It is because namespace variables are considered as "real data" whereas class's variables are not a real data.Global names are always accessible even within shadowing by global namespace:1int x = 5;2void f(){3	int x = 7;4	:: x = 30; // get global x5}RunVery important
+The scope of a name starts after complete declaration and before initializer. Thus possible:
+void f(){int x = x;}
+It may seems odd, but it makes sense: x contains garbage immediately after declaration.
+This does not apply to constructors.
+Note
+Declaration is not an expression.
+Declaration can't exist without its block {}. For example:
+1if (cond)2	int x = 5; // error3else4	float y=3; // errorRunForms:1T x1 {v}; // strongly recommended form!2T x2 = {v};3T x3 = v;4T x4(v); // Most vexing parse5// last can be treated as function declaration...RunList initialization (T x1 {v};) does not allow narrowing.A trap
+Using auto with list initialization can suprise:
+auto x {99}; — deduced as initializer_list&lt;int&gt;, not int (Except for C++17!)
+So, for auto it's better to use =-initialization
+initializer_list constructor is preferred.Reminder
+static objects (global, namespace, local static, static member) are initialized to {} by default!
+If array or structure is initialized to {}, nested fields are initialized to {} too.Be careful:1T x(); // always function declaration, not empty-args constructorRunauto is used for deducing type on initialization simply. Use for var, const, constexpr
+decltype() is used for deducing type of something more complicated. It's suitable not only for declarations.Important about auto
+auto often omit references and cv-qualifiers because in expression they are dereferenced and lose cv-qualifiers. So, you may (and need sometimes) do so:
+const auto&amp; x = ...
+As I've got on practice:1auto x{1}; // int 12auto x{1, 2}; // ERROR! Ambiguous type34auto x = {1}; // initializer_list&lt;int&gt;5auto x = {1, 2}; // initializer_list&lt;int&gt;6Rundecltype is more "smart" and can be used in more specific places (not with specific initializer):1template&lt;class T1, class T2&gt;2auto operator+(const Matrix&lt;T1&gt;&amp; m1, const Matrix&lt;T2&gt;&amp; m2)3-&gt; Matrix&lt;decltype(T1{} + T2{})&gt;4{5	Matrix&lt;decltype(T1{} + T2{})&gt; res;6	// ...7}RunConsider 2 properties:
+Has identity — the program has the name of, pointer to, or reference to the object
+Movable — the object may be moved (to another location without copying, leaving origin location in a valid but unspecified state)
+Let's use i for "has identity" and m for "movable".
+Note: there are no {i=no, m=no} objects at all (they don't make sense)
+Finally
+We can precisely describe the C++ language rules:<br>
+<img style="max-width:600px; " class="excalidraw-svg excalidraw-embedded-img excalidraw-canvas-immersive is-unresolved" src="blob:/e5ea63f2-7013-4974-b231-279dfd80fbc2" filesource="a9s/2025.10.06.md" w="600" draggable="false" oncanvas="false" target="_self">
+Note: you use 3 top types in real program
+where:
+lvalue - locator value
+glvalue - generalized lvalue
+xvalue - extraordinary, expiring value
+rvalue - read value
+prvalue - pure rvalue Note: Every expression is either an lvalue or an rvalue, but not both.
+Objects classification by lifetime:
+automatic
+static
+free store
+temporary objects (temporary objects live until the end of the full expression of which they are part)
+thread-local objects
+def, note
+full expression is an expression that is not part of another expression.
+Useful technique:1template&lt;class T&gt;2class vector {3	using value_type = T;4	// ...5}RunIt makes parameter-type T accessible outside: typename Container::value_type. Moreover, now value_type is like namespace member of class vector.Can be generalized with templates:1template &lt;typename T&gt;2	using Vector = std::vector&lt;T, My_allocator&lt;T&gt;&gt;;Run
+Specifiers cannot be applied to type aliases you can see ISO C++
+avoid magic constants (like __FILE__)
+prefer char rather than unsigned char or signed char
+avoid multiple declaration
+prefer {} for init with a named type
+prefer = for init with usage of auto
+use using type alias for generalization (with an eye to the future)
+use enum and class for not alias but new type
+There are machines that cannot to access individual bytes, it is the reason why sizeof(char) if assumed as 1.Suggestion
+For more compact data you can use: 1. bitwise logic, 2. bit-fields, 3. bitset.
+There is possibility to point to class members:1struct T{2 int a;3 void f(int a) { cout &lt;&lt; a &lt;&lt; " " &lt;&lt; this -&gt; a &lt;&lt; T::a &lt;&lt; endl; };4};56int T::*p = &amp;T::a;7void (T::*fp)(int) = &amp;T::f; // `&amp;` may not be omitted8 // as may be for usual func names (not in class)910int main()11{12	// usage example:13 T t{4};14 T *tp = &amp;t;15 (t.*p)++;16 (tp-&gt;*fp)(2);17	// output:18	// 2 5519}RunNote
+void* variable may not be assigned with function pointer or member pointer!
+Use static_cast&lt;TT*&gt;(void_pointer) to get pointer to TargetType(TT).Note
+In C++ array size must be constant expression.
+Reminder:1int arr[10];2arr == &amp;arr[0];3arr = new int[20]; // error! Can't assign to arrayRunTip
+Avoid array in interfaces (e.g., as function arguments)
+There is no built-in copy operation for arrays (but copy functions are).Note
+When you need assignment to a collection use: vector, or array (not []), or valarray
+Caution
+In old code you may meet char* str = "some text"; but in modern C++ it won't be compiled.
+The reason is: (in C) "hi" has type char [3], (in C++) it has type const char [3].
+WOW
+string literals are statically allocated, so you can:
+1const char *error_message(int i)2{3	// ...4	return "range error";5}RunInteresting (you may not assume whether two identical string literals are allocated as one):1const char* p = "Equal text";2const char* q = "Equal text";3cout &lt;&lt; p==q &lt;&lt; endl; // result is implementation-definedRunFor multiline:1const char* s1 = "hello\n\2world!\n";3const char* s2 = "hello\n"4 "world!\n";5const char* s3 = R"(hello6world7)";RunFully defined
+R"***(...)***" — contains custom pattern *** for open and close raw-string literal.
+Note
+Strings have u8"" literal, but there is no u8'' Note again: it's valid to point to the element one beyond last (pointers on arrays). Other deviations are UB by the standard.
+You can declare C-code:1extern "C" int strlen(const char*);2// avoids names manglingRunReminder
+It's not possible to return array from function!
+So funny 🤣
+a[i] == *(a+i) == *(i+a) == i[a]
+Сommutativity of addition of numbers and pointers allows i[a], but of course you should avoid this in prod Standard prescribes that subtraction of pointers is defined only when both pointers point to elements of the same array (and does not check that fact!)
+Important
+range-for works for a known-size arrays
+1void init(char&amp; x);23int main(){4 const int N = 7;5 char arr[N];6 for (auto&amp; x: arr)7 init(x);8}RunNote
+Some compilers suggest range checking, but avoid it in production
+Warning
+operator, (comma) is not allowed in constant expression:
+int arr[3, 5]; // ERROR!
+Some words about multidimensional arrays
+First, reminder:
+1void f(int arr[3][5]); ≡ void f(int arr[][5]); ≡ void f(int (*arr)[5]);Run
+Second, techninque:
+1void process(int* m, int dim1, int dim2){2	for (int i=0; i&lt;dim1; i++)3 for (int j=0; j&lt;dim2; j++)4 do_smth(m[i*dim2 + j]); // not m[i][j]5}Run
+Third, don't be fooled by C's variable-length arrays (VLA):
+1void f(int dim1, int dim2, int arr[dim1][dim2]); // ERRORRunRemember
+In C++ any array must have constexpr length. No non-const var can be used!
+Note
+const values must be initialized on declaration (non extern) Note that const modifies a type, it restricts the ways of use, rather than specifying how the constants is to be allocated.
+Remember: a pointer may be nullptr or point to an unexpected object.
+Reference always refers to object to which it was initialized. There is not nullref
+References is divided on:
+lvalue references
+const references
+rvalue references
+Possibly:1extern int&amp; a; // legal: initialized elsewhereRunNeed to know
+We cannot have a pointer to a reference. We cannot define an array of references. In that sense, a reference is not an object.
+Illustration for code:1int var = 0;2int&amp; rr{var};3++rr;4int* pp = &amp;rr; // == &amp;var, not &amp;rr (there is no rr indeed)Run<br><img alt="Screenshot 2025-10-07 at 03.03.28.png" src="a9s/screenshot-2025-10-07-at-03.03.28.png" target="_self" style="width: 500px; max-width: 100%;">The initializer for a const T&amp; need not be an lvalue or even of type T. In such case:
+First, implicit type conversion to T is applied if necessary
+Then, the resulting value is placed on a temporary variable of type T
+Finally, this temporary variable is used as the value of the initializer
+So, you can:
+1const double&amp; cdr{1}; // double tmp = double{1}; const double&amp; cdr {temp};Runnote: lifetime of tmp longs until the end of its reference's scope.Recommendation: if you're going to modify T&amp; arg in function, function's name should give a strong hist that the reference argument is modified.You can return T&amp; from functions to provide access to modify some object. For example:1template&lt;class K, class V&gt;2class Map{3public:4	V&amp; operator[](const K&amp; v); // return res. Then you can: res = ...5	// ...6};RunConsider common swap:1template&lt;class T&gt;2void swap (T&amp; a, T&amp; b){3	T tmp{a};4	a = b;5	b = tmp;6}RunThere have been made 3 copy operations!
+A better way:1template&lt;class T&gt;2void swap2 (T&amp; a, T&amp; b){3	T tmp{static_cast&lt;T&amp;&amp;&gt;(a)}; // candidate to move!4	a = static_cast&lt;T&amp;&amp;&gt;(b); // candidate to move!5	b = static_cast&lt;T&amp;&amp;&gt;(tmp); // candidate to move!6}RunNote, swap2 can't so: swap2(v, vector&lt;int&gt;{1,2,3});. Solution is to define overloads:1template&lt;class T&gt; void swap2(T&amp;&amp;a, T&amp; b);2template&lt;class T&gt; void swap2(T&amp;a, T&amp;&amp; b);3// now possible:4swap2(v, vector&lt;int&gt;{1,2,3});RunOtherwise, the std lib takes a different approach: it just defines special functions for the most used second argument in swap (duplicate end empty instance):1void f(string&amp; s, vector&lt;int&gt;&amp; v)2{3	// make s.capacity() == s.size()4	s.shrink_to_fit(); // or...5	swap(s, string{s});67	// clear v8	v.clear(); // or...9	swap(v, vector&lt;int&gt;{}); // or...10	v = {};11}RunFeel difference:1template&lt;class T&gt; class vector{2	//...3	vector(const vector&amp; r); // copy constructor (1)4	vector(vector&amp;&amp; r); // move constructor (2)5};67vector&lt;string&gt; s;8vector&lt;string&gt; s2{s}; // s is lvalue, so use (1)9vector&lt;string&gt; s3{s+" tail"}; // expr is rvalue so use (2)RunYes! Move!
+static_cast&lt;T&amp;&amp;&gt;(x) has alias std::move(x)
+(where T is typeof(x))
+Yeah!
+Since move(x) does not move x (just produces rvalue reference to x), it would have been better if move() had been called rval(), but by now move() has been used for years.
+Also
+Rvalue references can be used to provide perfect forwarding
+Consider interesting example:1using rr = int&amp;&amp;;2using r = int&amp;;34// *reference collapse*5using rr_rr = rr&amp;&amp;; // `int &amp;&amp; &amp;&amp;` -&gt; `int&amp;&amp;`6using rr_r = rr&amp;; // `int &amp;&amp; &amp; ` -&gt; `int&amp;`7using r_rr = r&amp;&amp;; // `int &amp; &amp;&amp; ` -&gt; `int&amp;`8using r_r = r&amp;; // `int &amp; &amp; ` -&gt; `int$`RunSimple mnemonic:
+« lvalue always wins! »
+This makes sense: nothing we can do with types can change the fact that an lvalue reference refers to an lvalue.
+note
+int &amp;&amp; &amp; r = ...; // invalid syntax!
+Reference to reference can only happen as the result of an alias or a template type argument!
+Remember
+You may have reference to pointer int* &amp;p = ...; but you may not have a pointer (and therefore array) to reference.
+Be careful! There is trick to create null-reference, but it generates an error on runtime:1char* ident(char * p) { return p; }2char&amp; r {*ident(nullptr)}; // possible, but disasterRun
+avoid nontrivial pointer arithmetic
+prefer not to use multidimensional arrays; use suitable containers instead
+prefer string rather than C-strings
+keep pointers that represent ownership inside handle classes
+prefer &amp; args over * args, except where "no object" is a reasonable option Some operators (e.g., == and !=) are not available by default for structures.
+Rule
+An object of a struct holds its members in the order they are declared. For optimize struct size (due to alignment) you can reorder members from largest to smallest.
+But usually best to order members for readability.
+EMERGENCY
+Use of multiple access specifiers (public/private/protected) can affect layout!
+Remember about self-reference and cross-reference abilities:1struct B; // incomplete but declared type23struct A{4	A* a; // possible with a pointer5	B* b; // possible with a pointer6	int data;7};89struct B{10	A* a;11};RunIncomplete type allows many optional (as long as that use does not require members' size of the size of type):1struct S;23extern S a;4S* p;5S f();6void g(S);7S* h(S*);8S* q = h(p);910// ERRORS:11S a;12f();13g(a);14p-&gt;m = 7;RunYou should avoid equality of names of struct and non-struct even while it is possible with disambiguation in C-style:1struct stat {...};2int stat(char* name);34stat("hello"); // is non-struct acceess5struct stat s; // struct access (as in C)RunInfo
+The same is true for class, union, enum
+My research:Remember enum is a type (not alias), and simultaneously defines int constants!
+C++ allows nested types (with block-space). So you can define enum or class in function or another class. Structures are classes indeed, but with public members and inheritance by default.
+By default, structure provide initialization of members in order:1Point p{}; // inited as {0, 0}2Point q{2}; // inited as {2, {}}, i.e. {2, 0}RunYou can define constant size array inside struct (for pass through func) adapted for range-for:1template &lt;typename T, size_t N&gt;2struct array{3	T elem[N];45	T* begin() noexcept {return elem;}6	const T* begin() const noexcept {return elem;}7	// ... and a few more89	constexpr size_t size() noexcept;10};RunWe can't deduce number of elements:1array&lt;Point&gt; points = {{1,2}, {7,-9}}; // error, N not givenRunKeep in mind Two structures are different types even when have the same members
+Also invalid: struct S{int x;} s; int i = s;
+Every struct must have a unique definition (same as function must) def
+plain old data (POD) — just data, a contiguous sequence of bytes in memory
+Note
+std::memcopy typically simply uses a block-move machine instruction (that is very efficient). They should use "such trick" only for optimized low-level code and avoid this in higher-level code.
+def trivially copyable type — has trivial copy/move ctors/ops and trivial destructor. Has no virtual functions/bases. Recursively for subobjects.
+trivial type — trivially copyable type with trivial default constructor
+standard-layout type — has no virtual functions/bases. Non-static fields has the same access level. Has no reference-members. Has no non-static data members in more than one base (or in base and in derived). Has no the same type base and first non-static member. You can compile-timed check for time for optimization:1template &lt;typename T&gt;2void mycopy(T* to, const T* from, int count)3{4	if constexpr(is_pod&lt;T&gt;::value)5 memcpy(to, from, count*sizeof(T));6	else7 for (int i=0; i!=count; i++)8 to[i]=from[i];9}RunExample:1struct PPN{2	unsigned int PFN : 22;3	int : 3; // offset4	unsigned int CCA : 3;5	bool nonreachable : 1;6	bool dirty : 1;7	bool valid : 1;8	bool global : 1;9};1011void part_of_VM_system(PPN* p)12{13	//...14	if (p-&gt;dirty) { // contents changed15 //copy to disk...16 p-&gt;dirty = 0;17	}18}RunNote
+Type of a bit-field may be only integral or enum.
+Example:1enum Type {str, num};2union Value{3	char* s;4	int i;5};6struct Entry{7	char* name;8	Type t;9	Value v; // use v.s if t==str, v.i otherwise10};Rununion is a kind of a struct which in turn is a kind of a class.
+However, there are some restrictions imposed on unions:
+A union cannot have a virtual functions
+A union cannot have members of reference type
+A union cannot have base classes
+A union cannot be used as a base class
+A union has deleted (), ==, =&lt;-, ~() if its member has custom one! UP: I've found that for unnamed union nested in class it behaves not so way.
+At most one member of a union can have an in-class initializer
+Rule (4) is for avoid "hidden costs" on derived classes.Rule (5) keeps simple unions simple. For complicated operations it forces the programmer to explicitly provide them. In fact, compiler does not know which constructors or copy operations to call, or which destructors to call.Wow!
+There is anonymous nested types injection! (see tagged union in example below). 1class Entry{2private:3	enum class Tag {number, text};4	Tag type; //discriminant5	union { // tagged (or discriminated union)6 int i;7 string s;8	};9public:10	struct Bad_entry {}; // for exceptions11	string name;1213	// Many of important are avoided!14	// ...1516	void set_number(int n)17	{18 if (type == Tag::text){19 s.~string(); // explicitly destroy string20 type = Tag::number;21 }22 i = n;23	}2425	void set_text(const string&amp; str)26	{27 if (type == Tag::text)28 s = str;29 else {30 // placement new: explicitly construct string31 new(&amp;s) string{str};32 type = Tag::text;33 }34	}35};Run<br>See <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch8/anon_union.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch8/anon_union.cpp" target="_self">full example</a>.The placement new
+Form of the new that places object in already allocated memory and doesn't cause additional allocation
+1enum class Color{2	red, // called enumerator3	green,4	blue5};RunIt's possible to define underlying type for enum:1enum class Warning : char {none=0, green=1, yellow=2, orange=4, red=8};2// sizeof(Warning) == 1RunYou can define operators for enum types:1constexpr Warning operator|(Warning a, Warning b)2{3	return static_cast&lt;Warning&gt;(4 static_cast&lt;int&gt;(a) | static_cast&lt;int&gt;(b)5	);6}RunNote: with constexpr you now can use it in constant expressions:1switch(x){2case Warning::green|Warning::yellow: // for green and yellow3	...4	break;5}RunWarn: for bool test you need to compare with none:1void f(Warning w)2{3	if ((w&amp;(Warning::yellow | Warning::orange))!=Warning::none)4 ... // for yellow or orange5}RunIt's possible to declare (not defined awhile) enum class:1enum class Color : char; // declarationRun
+Names injecting can also be called as namespace pollution
+Pay the attention!
+You can declare forwarding declaration enum only with setting the underlying type!
+enum Color; //error!
+enum Color: int; //ok
+The underlying type for contain values is calculated by range for signed and for unsigned to contain at least min and max enumerators.
+when you need to compact data place larger before smaller (for compact alignment)
+use bit-fields to represent hardware-imposed data layouts
+don't try naively optimize with bitwise games
+use unions to save space and never for type conversion
+use enums to represent sets of named constants
+prefer enum class over plain enum to minimize surprises
+define operations on enums for safe and simple use
+Note:
+declaration is a statement
+expression terminated with ; is a statement
+Reminder
+The compiler may reorder code to improve performance as long as the observer behavior persists.
+There are not so many statements:
+; — empty statement
+declaration
+expression;
+{} — compound statement or block
+try {} catch {}
+case &lt;constexpr&gt; : statement
+default : statement
+identifier : statement
+break, continue, goto &lt;identifier&gt;, (throw, but it's not a statement)
+return &lt;expression&gt;;
+selection (if, switch)
+iteration (for, while, do) Note: = (assignment) and () (function call) are expressions, not statements
+For condition in test statements argument implicitly converts to bool:
+if (arg) == if(static_cast&lt;bool&gt;(arg))Reminder:1if (cond)2	int x = val-3; // invalid! You may not only declare. Use {} at leastRunFor for loops we have:11st form:2for3	(&lt;for-init-statement&gt; [&lt;condition&gt;]; [&lt;expression&gt;])4 &lt;statement&gt;562nd form:7for8	(&lt;for-init-declaration&gt; : &lt;expression&gt;)9 &lt;statement&gt;
+for-init-statement may be either a declaration or en expression-statement (both end with a semicolon ;)
+for-init-declaration must be the declaration of a single uninitialized variable.
+For tests we have:11st form:2if (&lt;condition&gt;)3	&lt;statement&gt;452nd form:6while (&lt;condition&gt;)7	&lt;statement&gt;893rd form:10do &lt;statement&gt;11	while (&lt;expression&gt;);
+condition may be expression or [&lt;init&gt;]; expression.
+if &lt;init&gt; provided, it must declare and init a single variable.
+note: for do ... while (); you may not to declare in while(...)
+Note
+It's not possible to repeat the same value in cases:
+1switch (val) {2	case 2:3 ...4 break;5	case 4-2: // error: multiple usages6 ...7 break;8}RunThe compiler may optimize switches with jump-table or binary-lookup.The compiler often warn if you switch not all enum values:1enum class Color {red, blue, green, black, white, orange, purple};23int main()4{5	extern Color c;6	switch(c){7 case Color::red:8 ;break;9 case Color::blue:10 ;break;11 case Color::green:12 ;break;13 case Color::black:14 ;break;15 case Color::white:16 ;break;17 case Color::orange:18 ;break;19 // is `Color::purple` missing?20	}21}2223// Output:24// ../wl.cpp:10:9: warning: enumeration value 'purple' not handled in switch [-Wswitch]25// 10 | switch(c){26// | ^27// ../wl.cpp:10:9: note: add missing switch cases28// 10 | switch(c){RunNote
+This type of errors occur when someone adds new enumerator in enum def!
+Tip
+test impossible values separately.
+Pay the attention
+Scope of different cases' is common! Thus, there is many possible errors:
+1switch (val) {2case 0:3	int x;4	int y = 3;5	string s;6	// fallthrough7case 1: // jump bypasses initialization of y, s8	++x; // warning: using garbage!9	++y;10	s = "nasty!";11}RunNote:
+for uninitialized primitives you can use but garbage...
+for initialized primitives you get a error on compile
+for all user-defined you get a error on IDE
+Tip
+Avoid cross-references between case areas. Ot use additional {} blocks For form for( auto x : v ) {...} object v must provide begin and end in either:
+v.begin(), v.end()
+begin(v), end(v) Note: element x is *p, where p returned by .begin()
+1for (;;) { // prefer this2	// infinit loop3}45while () {} // error! expression is expected67while (true) {8	// infinit loop9}RunNote
+goto is prohibited for jump past an initializer or into an exception handler!
+Note
+goto doesn't cause enclosing loop's increment or condition, but correctly exit the scope, thus counter-variable will be destroyed.
+Advice
+Do not state something in comment, if this is stated in language itself! Don't declare before you have a value to initialize
+Prefer switch ti if when there is a choice
+Avoid goto
+Keep comments crisp (четкими)
+State intent in comments
+Maintain a consistent indentation style
+Let's overview the calculator program!
+There are some important and interesting notes about language facilities and others below.<br>
+Full exercise is done in <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch10/calculator.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch10/calculator.cpp" target="_self">the file</a>.Recursive descent — popular and straightforward top-down technique for syntax analysis.YOU MUST
+You must declare subsequent function even if its definition is in the same file!
+Most vexing parse (MVP)
+All that can be interpreted as a function declaration will be so.
+Clarifying
+sizeof and C-style cast are operators, not statements.
+reminder, correct forms: sizeof object or sizeof (object)
+sizeof (typename) — preferred form
+typename (expr)
+(typename) expr — preferred form In Token_stream we use useful and general technique for classes that hold a pointer to a resource requiring destruction:1Token_stream::Token_stream(istream&amp; s) : ip{&amp;s}, owns{false} {}2Token_stream::Token_stream(istream* p) : ip{p}, owns{true} {}RunStroustrup
+In general, dealing with complete objects is clearer and less error-prone than manipulating data members individually.
+Next functions use hash-search and are completely efficient!1isalpha(char), isdigit(char), isalnum(char), isspace(char)RunCurious!
+std::cerr is an unbuffered output stream!
+New facility — Structured bindings
+auto [x, y] = Point{2, 3.8}; // double x = 2, y = 3.8.
+Supported for any object with tuple_size, get, tuple_element
+Note
+If you don't explicitly return value from func — UB, but just warn on compile.
+1int main(int argc, char *argv[]){}RunWith &lt;sstreams&gt; you can use new istringstream{argv[1]}; to form istream from string<br>
+For more details see <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch10/calculator.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch10/calculator.cpp" target="_self">main(...)</a>.❗️Must see:<br>
+<a data-tooltip-position="top" aria-label="➕ Operator Summary > By Stroustrup" data-href="➕ Operator Summary#By Stroustrup" href="engineering/c++-essentials/➕-operator-summary.html" class="internal-link" target="_self" rel="noopener nofollow">Full Operator Summary</a>Interesting operators for me:1::x // access global x23typeid(type) // type identification4typeid(expr) // run-time type identification5sizeof...(Args) of sizeof...(args) // number of type args or func args67// Forms of alloc/delete:8new type // allocate9new type (expr-list) // allocate and init10new type {expr-list} // allocate and init1112new (expr-list) type // place13new (expr-list) type (expr-list) // place and init14new (expr-list) type {expr-list} // place and init1516delete pointer // dealloc17delete []pointer // dealloc array1819noexcept (expr) // &lt;- not specifier, just evaluatable operator2021// note22object.*ptomem // has lower precedence than object.member (!)23pointer-&gt;*ptomem // has lower precedence than pointer-&gt;member (!)RunNote
+Lambdas in C++ is objects of anonymous class with overloaded operator(). Just syntax sugar.
+Note
+Unaries and assignments are right-associative
+Others are left-associative
+Warning
+A few grammar rules cannot be expressed in terms of precedence (also known as binding strength) and associativity.
+Example: a=b&lt;c?d=e:f=g —&gt; a=((b&lt;c)?(d=e):(f=g))
+Tip!
+There is Max Munch rule in C++:
+«To make a token the longest possible sequence of characters is chosen». Example:
+&amp;&amp; —&gt; '&amp;&amp;' not '&amp;' '&amp;'
+a+++1 —&gt; 'a' '++' '+' '1' i.e. (a++) + 1
+All tokens of C++:<br>
+<img alt="Screenshot 2025-10-11 at 19.25.32.png" src="a9s/screenshot-2025-10-11-at-19.25.32.png" target="_self" style="width: 500px; max-width: 100%;">Result type of arithmetic operators are determined by a set of rules known as«The usual arithmetic conversions»
+The overall aim is to produce a result of the "largest" operand type types less than int are converted to int before evaluation.
+logical operator always produce bool result (but you can override for your class)
+Note!
+The result is lvalue if it logically feasible:
+1int j = x = y; // (x=y) -&gt; x, not just value of x2int* p = &amp;++x; // (++x) —&gt; x, not just value of x3int* q = &amp;(x++); // error! (x++) -&gt; tmp value4int* p2 = &amp;(x&gt;y?x:y); // `?:` —&gt; lvalue of largest, not just value5int&amp; r = (x&lt;y)?x:1; // error! `?:` —&gt; tmp value because of 1RunOh My God!!!
+Underflow, overflow, zero-division do not throw exceptions! Result just is UB
+Important reminder
+The order of evaluation is undefined!
+1int x = f(2) + g(3); // what is first? f or g?2v[i] = i++; // UB v[i] = i or v[i+1] = i?3f(a(), b()); // UB what is first?RunAttention about temporary objects
+See dangerous example:
+1void f(string&amp; s1, string&amp; s2, string&amp; s3)2{3	const char* cs = (s1+s2).c_str();4	cout &lt;&lt; cs; // Danger! cs may already point to released memory5	if (strlen(cs=(s2+s3).c_str())&lt;8 &amp;&amp; cs[0]=='a') { // safe6 // use cs7 // Danger! the same problem8	}9}Run constexpr may not have side-effects constexpr starts out with integral, floating or enum value constexpr can use some addresses language requires constexpr for array sizes, case labels, and template value arguments for embedded systems you should prefer .rodata because this memory is cheaper (in terms of cost and energy consumption), more plentiful, and immune to most system crashes if something is initialized in compile-time, there can be no data races on that object For C++11 it's only possibility to state return in constexpr function, so you can't use while. It that time sqrt was calculated as:1constexpr int isqrt_helper(int sq, int d, int a)2{ return sq &lt;= a ? isqrt_helper(sq+d, d+2, a) : d; }34constexpr int isqrt(int x)5{ return isqrt_helper(1, 3, x)/2 -1; }RunBut in modern C++ you can:1constexpr int sqrt(int x)2{3	int base = 1;4	while (base*base &lt;= x)5 base++;6	return base-1;7}RunTip
+The parts of ?: or &amp;&amp; or || that is not evaluated may not be an constexpr!
+Some notes by me and AI
+constexpr in C++20 can do quite a lot, if not everything. Strict rules are not found, but you can think about: transitive chain of constexpr calculations and no access to run-time environment.
+constexpr works like an interpreter, but clever one (with memoization and other optimizations)
+consteval is another form of exactly constexpr but with strictly-compile-time evaluation. This can be used only with functions
+if constexpr necessarily executed in compile-time (not recommendation)
+if consteval {...} is special construction for to check how enclosing constexpr function is called (run-time or compile-time)
+constinit new feature for ensure possibility compile-time initialization. Good for local-static variables (removes overhead of init-check), good for thread_local variables (removes guard usage). The main idea is that const is not an constexpr necessarily
+def
+literal type is a class with constexpr constructor
+Note: empty constructor can be considered as constexpr
+For example, we can:1struct Point{2	int x,y,z;3	// const here can be omitted ↓ but my compiler says no4	constexpr Point up(int h) const { return {x,y,z+h}; }5	constexpr Point move(int dx, int dy) const { return {x+dx, y+dy, z}; }6};78constexpr Point orig{0,0}; // -&gt; Point{0,0,0}9constexpr int z = orig.x;1011constexpr Point a[] = {12	orig, Point{1, 1}, Point{2, 2}, orig.move(3,3),13};14constexpr int x = a[1].x;RunIn old time compile-time programming in C++ was impoverished (no functions, only ints).
+In C++11 we already can more, and even:1template&lt;&gt; class complex&lt;double&gt;{2public:3	explicit constexpr complex(const complex&lt;long double&gt;&amp;);4	...5};RunThere is cast-constructor that takes a reference argument!Even more, with modern C++ we can use full-fledged reference operations! For example:1constexpr void f(int&amp; a)2{ a++; }34constexpr int g(){5	int x = 5; // will be modified in compile-time6	f(x);7	return x;8}910int x = g(); // initialized with 6RunComplicated moment1constexpr const char* str = "hello";2constexpr const char* p = str+2; // Stroustrup says it's impossible3constexpr char c = str[2];RunIn fact, char c can be evaluated at compile-time from literal, but address p is unknown. Modern standard is able to understand shifted address as const&lt;str+2&gt;def If you can convert value and then convert the result back to its original type and get the original value, this conversion is called promotion, that is value-preserving conversion.
+If not, it is narrowing conversion. WOW. You must memorize it forever!
+C++ have implicit promotion for all arithmetic. There are: all types shorter than int are promoted to int
+for floating-point computations in older versions they were promoted to double Promotions are performed to bring operands to the "natural" size for arithmetic operations.Integral promotions. Comprehensive list.
+They are promoted in order (until first enough space): char, signed char, unsigned char, short, unsigned short —&gt; I —&gt; UI
+char16_t, char32_t, wchar_t, enum —&gt; I —&gt; UI —&gt; L —&gt; UL —&gt; LL —&gt; ULL
+bit-field —&gt; I —&gt; UI
+bool —&gt; I
+Fundamental types can be implicitly converted into each other in a bewildering number os ways.For integral types:1-&gt; unsigned..., // just take last bits2-&gt; signed..., // implementation-definedRunFor floating types:1src -&gt; dst2// if src can be represented in dst (maybe in adjacent values) — OK3// otherwise — UBRunFor pointers:1// except func* or &amp;A::member2T* -&gt; void*34// for class B: A5(B*) -&gt; (A*)6(B&amp;) -&gt; (A&amp;)70 -&gt; void*8T* -&gt; const T*9T&amp; -&gt; const T&amp;RunFor boolean:1(*), ints, floats -&gt; boolRun1float -&gt; [trunc] -&gt; int2// if truncated value doesn't fit — UB34int -&gt; float5// with some loss of precision if an integral value cannot be6// represented exactly as a value of the floating typeRunYou can manually check to avoid data loss:1char checked_cast(int i)2{3	char c = i; // warn: non portable4	if (i != c) throw std::runtime_error{"int-to-char check failed"}5	return c;6}RunLet up(T) mean: if either operand is of type T, the other is converted to T
+Let adj(A-&gt;B) mean: if one operand is B and other is A, then if B can represent all the values of A, the A is converted to B.
+Rules:
+up(long double) otherwise, up(double)
+otherwise, up(float)
+otherwise, integral promotion are performed on both operands up(ULL) otherwise, adj(UL-&gt;LL) otherwise both -&gt; ULL
+otherwise, adj(U-&gt;L) otherwise both -&gt;UL
+otherwise, up(L)
+otherwise, up(U)
+otherwise both are I
+Note adj is implementation-defined. So, avoid mixing unsigned and signed integers. use raw input only when you have to
+always verify input
+avoid complicated expressions, use ()
+avoid order-undefined expressions
+avoid narrowing
+Remember, for ?: must be common type to which both operands can be implicitly converted.One interesting use:1int i = (p) ? *p : throw std::runtime_error{"unexpected nullptr"};RunReminder
+expr in expr++ / --expr and others is evaluated once only!
+Note
+x++ and x-- return temporary value, but ++x and --x return lvalue, &amp;x
+Note: prefer std copy over handmaden *p++=*q++
+I've measured real difference. Wow! Timings:
+1// manual_copy (index): 6.87 ms per copy, 138722.29 MB/s2// manual_copy (pointer): 7.07 ms per copy, 134829.35 MB/s3// std::memcpy: 0.15 ms per copy, 6574476.63 MB/s4// std::copy: 0.13 ms per copy, 7333085.66 MB/sRunThe main problems with manually controlled free store:
+Leaked objects
+Premature deletion
+Double deletion Deletion of a pointer doesn't assign its value to nullptr
+Two approaches to avoid free-store problems:
+Prefer scoped variables over using free store
+Save pointers from heap in manager object (like vector, string, etc.) — RAII
+From AI again (incomplete array type, delete[])
+T[] and T[10] are different types. First is deduced to T* in many contexts, but T[10] is known-size whole type.
+To invoke delete[] p you don't need to know size of array. That size is stored by allocator. But you need to know the type.
+Example of safety array allocation:1void f(int n)2{3	unique_ptr&lt;int[]&gt; p {new int[n]}; // calls delete[], not delete4	// ...5	// automatically destruct p underlying allocated memory6}RunUseful rule of thumb
+Naked new and delete can appear in constructors/destructors only.
+Often external user use new on init of resource handler. For old code with many bad-used new C++ provides std interface to garbage collector
+Note: free storage managers usually use a few additional memory (a couple of words) to store metadata for deallocationNote (Argument Dependent Lookup ADL):1namespace MyLib {2 struct Data {};3 void process(Data); // declared here4}56int main() {7 MyLib::Data d;8 process(d); // found MyLib::process through ADL9}RunThe std implementations of operator new() and operator new[]() don't initialize the memory returned.New information
+In fact, new may not throw exception when real RAM is exhausted, because there is often virtual memory with swap tables (which gives memory on access, not on allocation).
+You can define your own new with considering that:1void* operator new(size_t);2// ^^^^^^ necessary arg3T* p = new T;4// ^ implicitly inferred size by sizeof(T)RunAnd then, for example:1void* operator new(size_t n, void* p) noexcept2{3	cout &lt;&lt; "custom \"placement\" allocation" &lt;&lt; endl;4	// ... allocate5	return p;6}78// usage:9void* buf = reinterpret_cast&lt;void*&gt;(0xF00F);10T* p = new(buf) T;RunNote
+This code is educational example, in real code it conflict with std global operator new
+There are placement deletions:1void operator delete(void* p, void*) noexcept;2void operator delete[](void* p, void*) noexcept;RunNote by default do nothing, except possibly inform a garbage collector about deleted pointer
+are possibly called when placement new fails
+do not call the destructors Advice
+Avoid explicit destructor calls
+new policy: Both forms new and noexcept new can fail on allocation, the former with throw bad_alloc and the latter with nullptr returned.
+Both forms can successfully return, but later you can get crash on systems with virtual memory system (with lazy allocation) Note
+noexcept - keyword, nothrow - predefined const from &lt;new&gt;
+Example of noexcept new:1void f(int n)2{3	int* p = new(nothrow) int[n];4	if (p==nullptr) {5 // handle allocation error6	}7	operator delete(nothrow, p); // deallocate8}RunExample of unqualified list, which type must be determined from the context:1struct S{int a,b;};2void f(S);34int main()5{ f({1,7}); } // OK: f(S)RunFor ambiguous situation you need to provide concrete type:1struct S{int a,b;};2struct V{double a,b;};34void g(S), g(V); // overloaded56int main()7{8	g({1,3}); // error: ambiguous9	g(S{1,3}); // ok: g(S)10	g(V{1,3}); // ok: g(V)11}RunThree parts of {} implementation model:
+If used as constructor arguments, it just passes args to constructor. No copy
+If used as aggregate initialization, each arg is used to initialize element. No copy
+If used as initializer_list constructor, args are used to init underlying array. Example:1vector&lt;double&gt; v = {1, 2, 3.14};23// is interpreted as:4const double storage[] = {double{1}, double{2}, 3.14};5const initializer_list&lt;double&gt; tmp(storage, sizeof(storage)/sizeof(double));6// ^ private constructor 😞78vector&lt;double&gt; v(tmp);RunTip
+initializer_list is small object (pointer-like)
+initializer_list is immutable
+Tip
+You can see on double{3} as on modern way to set type for primitive
+Unqualified list can be used as an expression only as:
+func arg
+return value
+right-hand operand for =, +=, etc.
+subscript
+i.e. when type is inferable.
+To know
+T obj{...}; — direct initialization
+T obj = {...}; — copy/move initialization
+Note
+Type initializer_list cannot be deduced for templates! It is language restriction. Example:
+1template &lt;class T&gt;2void f(T) { }3template &lt;class T&gt;4void g(const vector&lt;T&gt;&amp;) { }56int main() {7	f({1,2,3}); // error8	g({1,2,3}); // error9}RunReason: It must be type for initializer-list, but not from.Also know as lambda functions, but strictly speaking incorrectly. Result of lambda expression is called closure object or simply a closure.Form:1auto f = []() mutable noexcept -&gt; type {};2// ^^ ^^^^^^^ ^^^^^^^^ ^^^^^^^ — all are optional3// 1 2 3 4RunNotes:
+by default lambda is const
+returns auto by default (inferred from return expression). If impossible, must be provided
+if you specify 2, 3, or 4; 1 must be specified too.
+An example:1void print_modulo(const vector&lt;int&gt;&amp; v, ostream&amp; os, int m)2{3	for_each(4 begin(v),5 end(v),6 [&amp;os, m] (int x) { if (x%m==0) os &lt;&lt; x &lt;&lt; endl; }7	);8}RunNote
+Using [&amp;] (all by reference) may be optimized!
+For capture this state this explicitly:1[=, this](...){...};2// ^^^^ then in ^ you can use just `field` or `this-&gt;field`RunInteresting feature
+auto f = +[]{cout &lt;&lt; "hello\n";}; will produce function pointer rather than function
+Note
+You can provide non a functor for for_each, but it fails on compile with long error message, because it sequentially finds for a operator()() [=] and [&amp;] in fact capture only those variable which you use
+Special forms:
+[&amp;, a, b] - a and b by value, others by reference
+[=, &amp;a, &amp;b] - a and b by reference, others by value
+Lambda with variadics:1template&lt;typename... Var&gt;2void algo(int s, Var... v)3{4	auto helper = [&amp;s, &amp;v...] { return s*(f(v...)+g(v...)); }5	// ^^^^ valid6}RunRemember: lambda might outlive its caller. So, using [=] is typically best for passing to another thread.
+Think of the capture list [...] as the initializer list for the closure object
+For body of lambda you don't need to capture global or namespace variables. They will be bound on lambda body definition time.
+Type is closure, function-like object. It is local class type.
+Type is unique for each lambda (else template instantiation mechanism might be confused)
+You can create lambda variable with
+auto or std::function&lt;R(AL)&gt;, where R — return type, AL — lambda's arguments list
+Wow!
+You can't use auto variable until its type has been deduced!
+So, option with function allows recursion!Wow!
+The lambda that captures nothing can be assigned to a pointer to function of an appropriate type!
+double (*fp)(double) = [](double a){ return sqrt(a); }
+Kinds of explicit conversion:
+type-safe with {}
+named convertions: const_cast
+static_cast
+reinterpret_cast
+dynamic_cast C-style casts
+Functional notation
+Stroustrup tend to use homemade conversions with explicit exceptions!1template &lt;class T, class S&gt;2T narrow_cast(S v)3{4	auto res = static_cast&lt;T&gt;(v);5	if (static_cast&lt;S&gt;(res)!=v)6 throw runtime_error("narrow_cast&lt;&gt;() failed");7	return res;8}RunWarn!
+You cannot initialize float from non-constexpr int by {}! But it's possible with constexpr (e.g. with literal) that is fit into float: float f{1234}; // OK
+Note
+In functional style cast you can't use full type without parentheses, use aliases:
+1int* ip; char* cp;2using iptr = int*;34ip = int*(cp); // error!5ip = iptr(cp); // OKRundef
+cast is explicit type conversion Just few reinterpret_cast are portable!
+Warn
+The result of reinterpret_cast is guaranteed to be usable only if its result is converted back to the exact original type.
+To know
+reinterpret_cast is the kind of conversion that must be used for pointers to functions.
+(T)expr can cast pointer to obj to pointer to its private base. Never do that!For a built-in types T(expr) is equivalent to (T)expr so it may do cast char* -&gt; int, that is dangerous!
+Any other cases can be non portable!
+Prefer T{v} conversions and named casts!
+prefer ++lv over lv++
+use resource handles (to avoid leaks, premature or double deletion)
+prefer scoped variables over one has been put on free store
+avoid naked new / delete
+Use RAII
+keep lambdas short and avoid their overuse
+be careful about reference-capture
+let the compiler deduce the return type of lambdas
+use T{v} notation for construction
+avoid explicit casts
+prefer named casts
+consider homemade narrow_cast for safe run-time casts
+Strict rule
+Any name must be declared before its mentioning. No exceptions
+Warn
+The semantic of argument passing are identical to the semantic of copy initialization! (there can be type checks and implicit types conversions)
+Parts:
+name
+params ()
+return type (maybe suffix -&gt; ...)
+inline
+constexpr
+noexcept
+static and others
+[[noreturn]] to indicate that func will not return using normal mechanism
+and for member-functions: virtual
+override
+final
+static
+const Must know
+Due to C compatibility a const ignored at the highest level of an argument type:
+1void f(int);2void f(const int); // interpreted the same3// These two DO NOT overload each otherRun
+Unnamed and unused arguments ensure that callers are not affected by the change
+Special things that follow most rules defined for functions but technically are not functions:
+constructors don't return value
+can initialize bases and members
+can't have their address taken destructors can't be overloaded
+can't have their address taken functors (function objects) are objects
+can't be overloaded lambda expressions are shorthand for defining functors Useful! (From AI)
+You can mark class as final at all: class SomeName final: Base {...}; Conversion functions do not contain return value For void function it is legal: return;
+Note
+Semantic of return (as of args passing) is identical to semantic of copy-init.
+Finally!
+return statement initialize a variable of the returned type!
+Useful form for templates:1void f(int* p);2void g(int* p)3{4	// ...5	return g(p); // -&gt;void but we can use f()6}RunExit function:
+return
+falling off the end
+throw
+uncaught exception in noexcept func calls std::terminate()
+call to exit() Function that does not return normally can be marked [[noreturn]]
+Good explanation why inline in not strict command, but compiler's hint:
+If inline func is recursive it may not terminate at all.
+Tip
+To make sure function body has been inlined use constexpr
+Interesting and important!
+To inline compiler must see definition of inline function (not just have .o file)!
+inline functions have address and their static variables!
+Warn
+If an inline function is defined in more than one translation unit, its definition in the different translation units must be identical!
+Have the definitions differed across translation units, the compiler would choose one arbitrarily (UB)!
+def
+constexpr means «should be usable in a constant expression when given constant expressions as arguments»
+Warn
+Rules for constexpr constructors differ over common. There, only simple initialization of members is allowed.
+Reminder
+Literal type is a type with constexpr constructor
+Important!
+If some variable is not declared with constexpr but initialized with such one, compiler may interpret its as constexpr for compile-time computations.
+Reminder: we can have run-time branches, which are not evaluated at compile time:1constexpr int check(int a)2{3	return (low &lt;= a &amp;&amp; a &lt; high) ? a : runtime(a);4}Rundef
+A construct [[...]] is called an attribute. It specifies some implementation-dependent property about the syntactic entity that follows it.
+Std [[noreturn]] indicate that function never returns. If not — UB!Reminder
+To initialize local static only once use constinit
+Local variables are initialized when execution reaches its definition.Note
+Standard protects local static initialization! It will be initialized only once. But further use-access from many threads is not protected! Avoid recursively defined local static!
+Note
+Local static variables are useful for avoiding order dependencies among nonlocal variables (the problem is it's unknown which global static is initialized first) Reminder: the scope of a label (out:) is the complete function
+<br>Bible:
+The semantic of argument passing are copy-init! see: <a data-href="⚡️ Initialization" href="engineering/c++-essentials/⚡️-initialization.html" class="internal-link" target="_self" rel="noopener nofollow">⚡️ Initialization</a>
+Note, there are:
+special rules for passing arrays
+facility for passing unchecked arguments (c-style variadics)
+facility for specifying default arguments
+facility for using {}
+several ways of passing to template functions
+In most cases you should avoid reference-passing arguments, expect for large object for efficiency (then use const T&amp;)
+Note: the arguments passing is not an assignment (in contrast of initialization). It's important for const args, &amp;/&amp;&amp; args, and user-defined types.
+You need to remember
+Literal, constant and conversion-requiring arguments can be passed through const T&amp; but not through T&amp;!
+👆🏼 explanation to study!
+When implicit conversion is needed, the compiler may create tmp object! That is why we need const — to prevent modification of tmp object!
+So, you must understand
+Casts do result into tmp! It does not affect the origin
+So, conversions for non-const reference arguments are disallowed. It helps to avoid the possibility of silly mistakes with temporaries.
+Reminder: passing via reference is passing by lvalue-reference!
+Note
+Rvalue references are used (in normal way) for changing, so it's extremely rare case of use it with const
+Note
+For template type T param type T&amp;&amp; is not the same as X&amp;&amp; (with certain X)!
+General «rules of thumb» for arguments passing:
+use pass-by-value for small objects
+use pass-by-const-reference to pass large objects for reading only
+return rather than modify "res-param"
+use rvalue references to implement move or forwarding
+use pass-by-pointer if there is "nothing" possible (via nullptr)
+use pass-by-reference only if you have to (pass by pointer is often less obscure and error-prone when you need modifications)
+Reminder
+Arrays are passed by pointer! In fact, pointer is passed by value
+Something incredible new!
+You can pass arrays by reference! It saves the size of an array completely!
+1template&lt;typename T, int N&gt;2void printarr(const T (&amp;arr)[N]){3	cout &lt;&lt; "size: " &lt;&lt; sizeof(arr)/sizeof(T) &lt;&lt; endl; // or just N4 for (const auto&amp; el : arr)5 cout &lt;&lt; el &lt;&lt; ", ";6 cout &lt;&lt;endl;7}RunWarn: there are as many functions generated by compiler as there are calls to printarr with distinct array types.Note
+initializer_list&lt;T&gt; argument takes priority if there is a possible ambiguity:
+1template&lt;typename T&gt;2void f(initializer_list&lt;T&gt; l) { /*...*/ } // (1)34struct S {int a; string s;};5void f(S s) { /*...*/ } // (2)67template &lt;typename T, int N&gt;8void f(const T (&amp;arr)[N]) { /*...*/ } // (3)910void f(int i) { /*...*/ } // (4)1112int main()13{14	f({1,2,3}); // calls (1)15	f({1, 2}); // calls (1)16	f({1}); // calls (1)17	f({1, "hi"}); // calls (2)!18}RunThere are 3 ways for variadics:
+use variadic template
+use initializer_list as argument type
+use &lt;cstdarg&gt; and ... param Use ... only if you have to. There are many alternatives: overloads, default args, initializer_list, variadic template.
+Possible form
+void f (int a ...); // with no ,
+Remind the basic macros for C-style variadics:
+va_list
+va_start
+va_arg
+va_end
+In-code example:
+1void f(int x, ...)2{3	va_list ap;4	va_start(ap, x);5	char* str = va_arg(ap, char*); // repeatedly...6	va_end(ap); // necessary!7}Run1complex::complex(double r, double i): re{r}, im{i} {}2complex::complex(double r): complex{r, 0} {} // interesing!3complex::complex(): complex{0,0} {} // interesting!RunAnd we can even more:1complex::complex(double r={}, double i={}): re{r}, im{i} {}RunNote
+Only = syntax for defaults!
+From AI
+Defaults are substituted in place of calling!
+Example with static default:1class X{2public:3	static int def_arg;4	void f(int =def_arg); // possible without name (!)5	// In fact, ^^^^^^^ is &amp;X::def_arg6	//...7};89int X::def_arg = 7;1011void g(X&amp; a)12{13	a.f(); // f(7) or f(0) (!)14	a.def_arg = 9;15	a.f(); // f(9)16}RunSo, advice
+Avoid default arguments that can change value! Default arguments may be provided for trailing arguments only
+Default argument cannot be repeated or change in the same scope:1void f(int x = 7);2void f(int x = 7); // or = 9 ERROR: redefinition of the default argument34void g()5{6	void f(int x = 9); // valid! Hides global scope declarations 7}RunNote: it's error-prone technique.Important
+When the compiler cannot to determine the best match, compile-time error occurs:
+1void print(double);2void print(long);34int main()5{6	print(1L); // print(long)7	print(1.0); // print(double)8	print(1); // error9}RunApproximated rules of AOR (in order):
+Exact match (with a few possible trivial conversions: array-&gt;pointer, func-&gt;func*, T-&gt;constT)
+Match with promotions (bool/char/short -&gt; int, unsigned promotions, float -&gt; double)
+Math with std conversions (e.g., int-&gt;double, double-&gt;int, double-&gt;long double, Derived -&gt; Base, T -&gt; void, int -&gt; unsigned int)
+Match with user-defined conversions (e.g., double -&gt; complex&lt;double&gt;)
+Match using the ellipsis ... (c-style) in a function declaration Overloading does not work with return type.
+Overloading works only with an overload set. By default, that means the functions of a single scope.Note
+Any name is searched in sequential order until first match:
+is in local? -[no]-&gt; is in enclosing? -[no]-&gt; is in global?
+If name is defined, it "is here", and then AOR is occurring "here", not much more.
+And even more info from AI:From standard
+When a name is declared in a local scope, it hides any declaration of that name in outer scopes. Hidden declarations are not considered during overload resolution. Example:
+1void f(int);2void f(double);34void g() {5 void f(double);6 f(2); // call f(double)7}89void h() {10	using ::f; // pay the attention! it forces to grabs global declarations11 void f(double);12 f(2); // call f(int)13}RunBetween classes in hierarchy (and namespaces) there is no overloading! If you want to, you need use using declarations, directives or Argument-dependent lookup (ADL). For example (provided by AI):1namespace A {2 struct X {};3 void f(X) { std::cout &lt;&lt; "A::f(X)\n"; }4 void g(int) { std::cout &lt;&lt; "A::g(int)\n"; }5}67namespace B {8 struct Y {};9 void f(Y) { std::cout &lt;&lt; "B::f(Y)\n"; }10 void g(double) { std::cout &lt;&lt; "B::g(double)\n"; }11}1213using A::g; // using-declaration14using namespace B; // using-directive1516struct Base {17 void h(int) { std::cout &lt;&lt; "Base::h(int)\n"; }18};1920struct Derived : Base {21 using Base::h; 22 void h(double) { std::cout &lt;&lt; "Derived::h(double)\n"; }23};2425int main() {26 A::X x; B::Y y;2728 f(x); // ADL → A::f(X)29 f(y); // ADL → B::f(Y)3031 g(42); // using-declaration → A::g(int)32 g(3.14); // using-directive → B::g(double)3334 Derived d;35 d.h(10); // using Base::h → Base::h(int)36 d.h(2.71); // Derived::h(double)37}RunRule is:
+A function that is the best match for one arg and not worse for all others is called.
+Consider ambiguity:1void f(char);2void f(long);34void work(int i)5{6	f(i); // ?! Ambiguity7}RunYou can solve this with:1inline void f(int i) { f(long{i}); }2// or3f(static_cast&lt;long&gt;(123));RunTip
+You can appreciate frequently ambiguity error reports as useful indicator of design error
+Documenting preconditions and postconditions is important! In fact, it is usually hard to check correctness.Hint
+You can call function by its address. So, dereferencing is optional. Similarly, using &amp; to get address of a function is optional.
+You can use the nastiest cast reinterpret_cast to change type of a function pointed to:1int (*f)(int*);2void (*g)(void) = reinterpret_cast&lt;void (*)(void)&gt;(f);RunCaution: unpredictable, system-dependent!Warn
+If function is overloaded, auto can fail on type deducing!
+1auto funcpointer = f; // may fail if f is overloadedRunRemember: pointer to member-function has a quite different semantic.Danger!
+A pointer to a noexcept function should be declared noexcept if you want to preserve useful information:
+1void f(int) noexcept;23void (*fp)(int) noexcept = f;RunYou must
+You must reflect the linkage of a function in a pointer to it. And it's impossible in alias:
+1using cfp = extern "C" void(int); // error!2// ^^^^^^^^^^ must be specifiedRunInteresting
+Because macros rearrange text of the program before the compiler sees it, they are a major problem for support tools.
+If you use macros, you can expect inferior service from: debuggers
+cross-reference tools
+profilers Note
+Macros cannot have: overloads
+recursion Useful techniques:
+#define CASE break;case
+#define FOREVER for(;;)
+`#define INCR_xx (::xx)++
+Tip
+You should use /* */ comments rather than // in macros for backward compatibility.
+Reminder
+Tokenizer does its work before preprocessor. Thus, macros work with tokens (not symbols). And the same takes place inside the macro body!
+Macro can be variadic:1#define err_print(...) fprintf(stderr, "error: %s %d\n", __VA_ARGS__)2// __VA_ARGS__ extends to arguments that were actually passed, as a stringRunThe ellipsis ... means that __VA_ARGS__ represents the argumentsPredefined by compiler:
+__cplusplus standard version (and undefined if in C)
+__DATE__ in format: MM dd yyyy
+__TIME__ in format: hh:mm:ss
+__FILE__ path of current source file
+__LINE__ source line number
+__func__ C-style string name of current function
+__STDC_HOSTED__ is 1 if implementation is hosted, and 0 otherwise
+Conditionally predefined by implementation:
+__STDC__ is defined in C, is not in C++
+__STDC_MB_MIGHT_NEQ_WC__ is 1 if possibly 'a' != L'a' (for all in basic character set)
+__STDCPP_STRICT_POINTER_SAFETY__ is 1 if the implementation has strict pointer safety
+__STDCPP_THREADS__ is 1 if a program can have more than one thread of execution, is undefined otherwise
+Note
+Most implementations allow a user to define arbitrary macros on the command line or in some other form of compile-time environment. For example define NDEBUG to turn on macro assert(...)
+Implementations often provide additional facilities. Standardized syntax for enabling is:1#pragma ... ... ...Run
+keep functions short
+don't reference or point to locals
+use constexpr if func is compile-time computable
+use attributes (e.g., [[noreturn]])
+use const!
+use initializer_list for similar-typed variable length lists
+when overload over integers, provide functions to eliminate ambiguities
+prefer functors and lambdas over function pointers
+use CAPITALIZED_NAMES for macros Any copyable/movable type is valid to be thrown as exception, but you should use user-defined types!
+The exception-handling mechanism:
+Is an alternative to traditional techniques (which are insufficient, inelegant, error-prone)
+Is complete; it can be used to handle all errors
+Allows to explicitly separate error-handling code from ordinary code
+Supports a more regular style of error handling
+User-defined type of exception, example:1struct Range_error{};2void f(int n)3{4	if (n&lt;0 || n&gt;max) throw Range_error{};5	// ...6}RunThere are some ways:Note: these ways are not general ;(
+Note: in some programs you will find an unsystematic combination of these approaches(
+Tip
+noexcept explicitly make the desire of terminate on exception
+Interesting
+"Exceptional" doesn't mean "almost never happens" or "disastrous"
+Note
+Exceptions are not about asynchronous event. For these events there are defined mechanisms such as signals to deal with asynchrony. They are system-dependent.
+There are programs that for practical and historical reasons cannot use exceptions. For example:
+In a time-critical component of an embedded system we must use alternative error-handling methods
+In a large old programs with naked new/delete you often find no throw/catch
+Two useful techniques for old programs:
+Mimic RAII (with .invalid() that returns error code)
+Use pair&lt;Value, Error_code&gt; on return
+To know
+The exception-handling mechanism is inherently nonlocal, so you should: adherence to an overall strategy
+take simple strategy (otherwise it won't be adhered)
+agree on strategy when development starts Tip
+Not every function should be a firewall Too great work to do
+Too great overhead and tendency to overcheck the same errors
+Functions from other languages won't obey the rules
+Pure local reliability leads to huge complexities Different parts should appear to follow general error-handling strategy even if it internally follows a different strategy. So, sometimes you should convert errno to throw ... and vice versa.
+In principle (but hard doing so):
+Exception handling can be implemented without overhead when no exceptions are thrown
+If exception is thrown, it costs not much more than usual function call
+Remember: traditional methods take not less overhead!With C-functions be careful considering they throw or not any exceptions.def
+exception-safe operation is that which leaves the program in a valid state when throws. Often we think: what is a valid state?
+Avoid implicit invariants! The compiler cannot to discover and maintain then.Std library guarantees (one of the following):
+Basic guarantee for all operations: no leaks.
+The basic invariant of every built-in and std-lib type guarantee that you can destroy and object or assign to it after every std-lib operation
+Strong guarantee for key operations: operation succeeds or has no effect.
+Provided for key operations, such as push_back(), insert(), or uninitialized_copy()
+Nothrow guarantee for some operations: them are guaranteed not to throw an exception.
+Provided for a few simple operations, such as swap() or pop_back()
+In return, these guarantees are presented on the condition that (all of):
+user-supplied operations do not leave container elements in invalid states
+user-supplied operations do not leak resources
+destructors do not throw exceptions Moreover, an operation that throws an exception must not only leave its operands well-defined states but also ensure that every resource that it acquired is (eventually) released.
+(Often guarded by language facility of destructors on throw) Example of system resources: files, locks, network connections, threads.
+Tip (from AI)
+Main idea: don't do releasing manually. Let the compiler do work for you.
+Exception handling mechanisms is friendly to RAII.Must to know
+Destructors are implicitly called only for objects that were correctly constructed! If your constructor fails, it should restore state of program to primal state as far as possible. It can be achieved by RAII members automatically.
+Tip
+If you need dynamically construct an object, use unique_ptr and shared_ptr for RAII.
+RAII can help to realize finally action:1template &lt;typename F&gt;2struct Final_action {3	Final_action(F f): clean{f} {}4	~Final_action() {clean();}5	F clean;6};78template &lt;typename F&gt;9Final_action&lt;F&gt; finally(F f)10{ return Final_action&lt;F&gt;{f}; }1112// usage:13int main(){14	auto fact = finally(15 [](){ cout&lt;&lt;"finally"&lt;&lt;endl; } // you can capture here ;)16	);17	cout &lt;&lt; "do work..." &lt;&lt; endl;18}Run
+Note: it is like an defer in golang
+What if precondition fails? There are 2 points of view:
+Just don't do that. Assume that caller ever meet preconditions
+Terminate the program. Just terminate routine
+Errors may be later eliminated by improved design, debugging and testing. First approach improves performance (eliminate millions of tests) but require to deal with many testing errors. Second approach tends to be used in systems where you can just restart (part of a bigger system). In real programs you can find all three ways (exceptions, ingnoring, terminating). You can throw without real expectation of exceptions.Real solution — assert!
+chose between compile-time and run-time
+chose action for run-time: throw, ignore, terminate()
+no generate code for assert until there is debug flag, level of checking or mask.
+avoid verbose or complicated asserts
+Tip
+The standard offers two simple mechanisms: &lt;cassert&gt; with assert(A) macro working when NDEBUG is undefined. If assertion fails, compiler writes out: cond, func name, file name, line no. and terminates program
+static_assert(A, message) provided by language for compile-time
+Tip
+Avoid "ordinary checking code" like if (debug_level&gt;2 &amp;&amp; ...
+<br>Furthermore, Stroustrup suggest specialized user-defined approach for compile-time omitting high-level assertion. See <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch13/massert.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch13/massert.cpp" target="_self">code</a>.
+In C++20 I can suggest more elegant variant:1template &lt;int level = 1&gt;2constexpr void assert(bool cond, const char *message = "Assertion failed")3{4 if constexpr (!(level &lt; assertion_level)) // this may truncate func5 return;6 else7 {8 if (cond)9 return;10 if (assertion_mode == Mode::throw_)11 throw runtime_error(message);12 if (assertion_mode == Mode::terminate_)13 terminate();14 }15}RunTip
+It is wise to have some tests in the final version of a program with the most-important assertion level. For library general code you should prefer reporting errors over terminating.
+You can throw an exception of any type that can be copied or moved.
+You cannot throw typename:1throw MyErrorClass; // invalid!RunYou need to know
+On throw temporary object is created. In process of stack unwinding this object may be copied, moved, or even be untouched (due to the compiler optimizations)
+Stroustrup says:
+The semantics of exception propagation are those of initialization, so objects of types with move semantics are not expensive to throw.
+From AI
+RTTI is active only for: exceptions, virtual classes, and maybe for typeid.
+You can use std-lib exceptions hierarchy (exception, runtime_error, out_of_range, etc.) with inheritance and .what() or just for instantiating.Used for:
+clarity for programmers
+optimization ability for compiler
+Important
+On throw from noexcept destructors of calling function are not invoked. Invocation of local (to throw) destructors is implementation-defined.
+From AI
+Ways to terminate program: exit, quick_exit, terminate, abort.
+Reminder!
+noexcept can be supplied with additional bool: noexcept(true). You can conditionally define it with any constexpr:
+template&lt;typename T&gt;
+void action(T&amp; x) noexcept(Is_pod&lt;T&gt;());
+Wow again!
+Also you can use noexcept as operator with expr: noexcept(expr). It looks at all operations in expr and if all are noexcept returns true (false otherwise). It does not evaluate or look inside definitions of those operations.
+In older C++ code you may find exception specifications:1void f(int) throw(Bad, Worse);2void g(int) throw(); // may not throw, noexcept equivalentRunDeprecated, deleted. Don't use itFor:1void f()2{3	try { throw E{}; }4	catch (H) {...}5}RunThe handler is invoked if: (unambiguous public base) or If H is a reference and (1) or (2) holds for the type to which H refers Also you can declare H as const Wow
+Exceptions require memory.
+It's guaranteed that there is enough memory to hold out_of_memory exception (whatever strategy of exception placement implementation apply).
+Important (from AI)
+Use &amp; in catch for using polymorphic types!
+From AI
+There is stack of "waiting exceptions" if during an exception handling another occurs.
+Instrument
+throw; rethrows current_exception() if any, terminate() otherwise.
+Warn
+If you catch and rethrow Base exception, you have sliced exception. Then caller couldn't have caught Derived exception!
+For std::exception from &lt;stdexcept&gt; you can catch (exception&amp; err). But for any:1catch(...)RunImportant
+Use correct order of catch clauses: from more specific to more general.
+New construction:1void f()2try {34} catch (...) {56}RunEspecially useful for constructors:1A::A()2try3	:member1{...}, member2{...} // (1)4{5	// ... (2)6} catch (...) {78}Run<br>Note
+In second case (try before member initializer list :...) if exception occurs in (1) or (2) it would be propagated to caller of constructor (despite we catch)! See <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch13/ctorcatch.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch13/ctorcatch.cpp" target="_self">more</a>.
+Must to know
+Some already-initialized members will be destructed on exception thrown, others — won't be constructed at all.
+Useful techniques:
+Don't throw while handling an exception
+Don't throw if that cannot be caught
+Specific rules for calling terminate() (take note: C++11):
+no suitable catch
+throw in noexcept
+when destructor throws on stack unwinding
+when code on throw propagation throws
+throw; when there is no current_exception()
+when destructor for a statically allocated or thread-local object throws
+when init for a statically allocated or thread-local object throws
+when a function from atexit() throws
+Take a note
+terminate() call abort(). You can redefine it by set_terminate() from &lt;exception&gt;. For example:
+1using termfunc = void(*)();2[[noreturn]] void my_handler()3{ ... }4termfunc old = set_terminate(my_handler);RunDanger
+If terminate() is entered, you should assume all program data structures to be corrupted (even cerr). If you try return or throw from terminate — abort will be called immediately.
+Note
+abort() indicates abnormal exit. exit() can indicate normal. Don't consider anything about destructors on terminate()
+Note
+There is no way of catching exceptions thrown during init/del namespace and thread-local variables. (Another reason to avoid globals)
+If a thread doesn't catch any exception the whole program will be terminated! To avoid use catch(...) or transfer exception to user-thread via current_exception() as packaged_task does:1promise.set_exception(current_exception());Run<br>See full example <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch13/vector.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch13/vector.cpp" target="_self">here</a>.Useful principles:
+Never let go of a piece of information before its replacement is ready for use
+Always leave objects in valid states when (re)throwing an exception Even innocent-looking operations might throw (&lt;, =, sort(), etc.)
+Problems you may not sight:
+allocator::allocate may throw if there is no memory left
+T copy-ctor may throw
+(copying of allocator rarely may throw too, if not std)
+Important techniques from full example:1	::new (static_cast&lt;void*&gt;(&amp;*p)) T(x);RunPay attention to ::new to access global and &amp;*p for iterator that is not a pointer.Use std-lib implementations:1uninitialized_fill(), uninitialized_fill_n(), uninitialized_copy()RunStroustrup
+Exception transparency is often the best policy for templates and other "thin" layers of software.
+Tip
+All std lib algorithms (e.g. uninitialized_fill, uninitialized_copy, ...) provide important guarantee: sub-objects (bases, members) that have already been completely constructed will be properly destroyed if any exception occurs.
+Pay attention
+There is self-assignment v=v.
+Warn
+std::copy does not offer the strong exception-safety guarantee. Thus, after unsuccessful operation you might have some elements copied and some not. However, operands still stay in valid state.
+Tip
+std lib vector has more efficient operator= but with weaker exception-safety guarantee (basic)
+May be useful
+Std lib provide move_if_noexcept
+My thought
+If you don't know what to do about exception-safety, on throw try remain object unchanged or at least valid.
+Helpful
+Use ordering and RAII rather than try/except blocks. develop error-handling strategy early in design
+throw an exception to indicate you can't perform an assigned task
+use user-defined types for exceptions
+if you cannot use exceptions, mimic them
+<br>always provide the <a data-tooltip-position="top" aria-label="Stroustrup B. — TC++PL. Tome 3 > 13.2 Exception Guarantees" data-href="Stroustrup B. — TC++PL. Tome 3#13.2 Exception Guarantees" href="engineering/book-notes/stroustrup-b.-—-tc++pl.-tome-3.html" class="internal-link" target="_self" rel="noopener nofollow">basic guarantee</a>
+always try for strong guarantee
+let the constructor establish invariant and throw if it cannot
+release locally owned resources before throw
+minimize usage of try/except blocks
+always prefer compile-time checking
+use noexcept
+catch hierarchical exceptions by reference
+don't assume that every exception is derived from std::exception
+leave operands in valid states before throwing an exception from an assignment
+never let an exception escape from a destructor
+keep ordinary code and error-handling one separate
+remember: on throw naked-allocated (new) objects won't be destroyed automatically
+assume that every exception that can be thrown will be thrown
+library should not terminate, use throw and let a caller decide
+library should not log, use throw and let a caller decide
+We need to cope with name clashes problemExample:1namespace Graphic_lib{2	class Shape {...};3	class Line : public Shape {...}; // not requires explicit Graphic_lib::4}5namespace Text_lib{6	class Line{...};7}RunGood practice
+Place names in common namespace when they bring similar facilities. Classes are (kinds of) namespaces, but not literally.
+1using std::string; // means 'string' is 'std::string'RunNote
+It introduces synonym into a scope using can be used with class hierarchies
+1using namespace std;RunOops
+It works!
+1namespace A{2	void f(){...}3	void afunc(){...}4}5namespace B{6	void f(){...}7	void bfunc(){...}8}910using namespace A;11using namespace B;12afunc(); // OK13bfunc(); // OK14f(); // errorRunFor this automatic kind of lookup, namespace and function must be in scope and declared before ADL.When we call function, we find consequently:
+in enclosing scope
+in namespaces of arguments (including classes and bases)
+Example:1namespace Chrono{2	class Date {...};3	bool operator==(const Date&amp;, const string&amp;);4}56void f(Chrono::Date d, string s)7{8	if (d==s){ // find in f-scope, then in Chrono:: and std::9 ...10	}11}RunNote
+The best match is called
+To know
+When member calls, other members of the same class and its bases are preferred over ADL.
+warn: operators follow a different rule!
+1namespace N{2	struct S{...};3	void f(S);4}5struct Base{6	void f(N::S);7};8struct Derived: Base{9	void g(N::S);10	void work(N::S x)11	{12 f(x); // Base::f13 g(x); // Derived::g14	}15};RunStandard says:
+If arg is a class member, the associated namespaces are the class itself (and its bases) and the class's enclosing namespaces
+If arg is a namespace member, the associated namespaces are the enclosing namespaces
+If arg is a built-in type, there are no associated namespaces
+Be careful
+For members of namespace don't assume it behaves as for classes:
+1namespace N{2	class X{...};3	void f(X, int);4}56namespace SomewhereAway{7	N::X x;8	void f(N::X, unsigned); // won't called9	void work()10	{11 f(x, 1); // N::f by overload resolution (!)12	}13}Run
+If replace namespace to struct it will call SomewhereAway::f
+My research
+For unqualified name the compiler uses union () of ordinary lookup and ADL and then overload resolution. Except for: class-member lookup!
+From AI:
+You can use anonymous namespace to hide some names from global
+Useful
+Separate different kinds of interfaces:
+1namespace Parser { // user interface2	double expr(bool);3}4namespace Parser { // implementer interface5	double prim(bool);6	double term(bool);7	double expr(bool);89	using namespace Lexer;10	using Error::error;11	using Table::table;12}RunSo, we have:<br>
+<img style="max-width:400px; " class="excalidraw-svg excalidraw-embedded-img excalidraw-canvas-immersive is-unresolved" src="blob:/6495b05e-e33b-4770-9c02-48a2a5f4d73b" filesource="a9s/2025.10.21.md" w="400" draggable="false" oncanvas="false" target="_self">Also, we can (but not necessarily) use different names:1namespace Parser {2	double expr(bool);3}4namespace Parser_impl { // changed5	using namespace Parser; // key line (!)67	double prim(bool);8	double term(bool);9	double expr(bool);1011	using namespace Lexer;12	using Error::error;13	using Table::table;14}RunSuddenly!
+Syntax for namespace aliases:
+1namespace SomeLongNamedNamespace{ /*...*/ }2namespace slnn = SomeLongNamedNamespace;RunImportant
+In qualified lookup the compiler should find the composed fields, but for context where you need actual name it is treated as error:
+1namespace N{2 int f();3}45namespace M{6 using N::f; // or using namespace N7}89int M::f(){} // error: 'f' is not actual member of MRunYou can use selection (using-declaration) with over composition (using-directive) to resolve name clashes and ambiguities:1namespace A{2	int common;3	int a;4}5namespace B{6	int common;7	int b;8}9namespace MyLib{10	using namespace A;11	using namespace B;1213	using A::common; // resolve clash for 'common'14	// can use a (A::a) and b (B::b)15}RunMy important note:1void work(){2	using MyLib::common;3	print(common); // OK, prints A::common (1)4}5void work_(){6	using namespace MyLib;7	print(common); // — ERROR (2)8	print(MyLib::common); // OK (3)9}RunI've got so:
+Unqualified lookup will gather all names (so we have error in (2))
+Qualified lookup does not touch using-directives if not necessary (so all ok in (3))
+Reminder
+You can make template with using:
+1template &lt;typename T&gt;2using Vector = MyLib::Vector&lt;T&gt;;Run
+The main point is you can use using namespace std; using namespace estd; (extended std) and let the lookup mechanics to find appropriate sort(...)
+Wow!1namespace PopularLib{2	inline namespace V3_2{3 double f(double);4 // ...5	}6	namespace V3_0{7 double f(double);8	}9}Run
+inline namespace extends to be PopularLib itself, that is, using namespace PopularLib; is equivalent to use using namespace PopularLib::V3_2;
+There is not the best trick for avoiding disadvantages of inline-versioning:1// V3_common.h2	// ... lots of declarations ...34// V3_2.h5	namespace V3_2{6 double f(double);7 #include "V3_common.h"8	}910// V3_0.h11	namespace V3_0{12 double f(double);13 #include "V3_common.h"14	}1516// Popular.h17	namespace Popular{18 inline19 #include "V3_2.h"20 #include "V3_0.h"21 #include ...22	}Run
+You should avoid that approach!
+Namespaces can be nested and names lookup works to access enclosing names:1void h();2namespace X{3	void g();4	namespace Y{5 void f();6 void ff();7	}8}910void X::Y::ff()11{12	f(); g(); h(); // OK13}1415void X::g()16{17	f(); // no f() in X18	Y::f(); // OK: Y is visible, take Y::f19}RunNote
+Nested structures embed their names to enclosing structure (or class).
+But namespaces never do!
+Finally
+You can hide some names from outer access:
+1namespace { // inaccessible from outside2	int a;3	void f() {...}4}56void work()7{8	cout &lt;&lt; a &lt;&lt; endl; // valid (!)9}RunPay attention!
+That (!)-line is valid! It's possible because unnamed namespace indeed is extended to:
+1namespace $$${2	// ...3}4using namespace $$$; // &lt;- WOW!RunTo carefully avoid polluting global namespace C++ wrappers for C (e.g., &lt;cstdio&gt; for &lt;stdio.h&gt;) use using-declarations (not using-directive)
+place every nonlocal name (except main()) in some namespace
+design namespaces avoiding accidentally gaining access to unrelated namespaces (e.g., do not using namespace SomeHugeLib; in your public library namespace)
+avoid very short names for namespaces
+use separate namespaces for interfaces and implementations
+limit usage of using-directives with: transition, foundational libs (such as std) or within local scopes
+don't put using-directive in .h files Interesting fact: there are systems that do not use traditional approach: with files.
+Keep in mind
+Even for small change in some dependent file you need to recompile the entire program.
+Keeping program separated by many files allow significantly reduce complete compile time.
+def
+Translation unit is a result of preprocessing (i.e. macros done)
+Warning
+Linker is sometimes called a loader
+My research
+Types of lib linkage: 1.static linking, 2. dynamic linking, 3. run-time dynamic loading.
+(2) and (3) are also known as load-time dynamic linking and explicit dynamic loading respectively.
+important: for both (2) and (3) you need to have declared types in user-program. Moreover, if there is user-defined types in dynlib it's essential to use interfaces (abstract classes) and factory functions.
+def
+Physical structure is organization of a program into source files.
+Names of
+functions,
+classes,
+templates,
+variables,
+namespaces,
+enumerations and enumerators
+must be used consistently across all translation units (unless the are explicitly specified to be local).
+Interesting note
+Added linkage specification (e.g., extern "C") we have exhaustive list of all top-level entities. My research
+Interesting facts you need to know! Class members are considered declared on class open. Also, member-functions are inline by default:
+1class A{2 public:3 void f(){g();} // you can access g() if it's already declared4 void g(){} // is inline, as well as f()5};RunMust to know!
+const and constexpr variables have internal linkage by default! It's very important for declarations in .h files. Use extern explicitly for only once occurrence!
+constexpr functions implicitly have inline, so they can be safely defined in .h Reminder: finally in result you have only functions and variables for external linkage. No types, templates, namespaces or something else.
+Local variables and other names which compiler does not see are said to have no linkage.Avoid this banned (but possible) construction:1 extern inline int f();2//^^^^^^^^^^^^^ - bad practiceRunFor localization use:
+unnamed namespace
+static
+As a rule of thumb, a header (.h) may contain
+named namespace
+inline namespace
+type def
+template decl or/and def
+function decl
+inline function def
+constexpr function def
+data decl
+const and constexpr defs
+enums
+name decl (e.g., class Matrix;)
+type aliases
+static asserts
+#include, #define, #ifdef and other macros
+comments
+Stuffs you should ever avoid in headers:
+ordinary function def
+data def
+aggregate def (e.g. short table[] = {1,2,3};)
+unnamed namespace
+using-directives
+Recommendation: #include only complete defs and decls.In fact, this rule "ODR" is phrased in more complicated and subtle manner that they can expect.
+You may have 2 identical definitions of class/template/inline-func if and only if:
+they appear in different TU, and
+they are token-for-token identical, and
+the meaning of those tokens are the same in both TU
+Remember
+Checking against inconsistent class definitions in separate translation units is beyond the ability of most C++ implementations. So it's up to programer not to violate consistence of type definitions between files.
+Note: for std-lib headers #include&lt;...&gt; may not actually find and paste some text!For every C lib like &lt;LIB.h&gt; in C++ there is &lt;cLIB&gt; header.For:1extern "C" char* strcpy(char*, const char*);Run"C" does not mean language, but linkage specification only. It may be used for linkage with Fortran or assembly as well (if they conform to the conventions of a C implementation).Note1extern "C" int g; // just declaration2extern "C" {3	int g; // (!) definition4	extern int g; // just declaration too, use extern again5}RunSuddenly1namespace MyLib{2	extern "C" double f(double);3}RunIn C++ we should use MyLib::f but for linker this name will still be plain f.When linkage is specified for a declaration, the specified linkage applies to all: function types, function names, variable names introduced by the declaration:1typedef int (*FT)(const void*); // FT has C++ linkage2extern "C" typedef int (*CFT)(const void*); // CFT has C linkageRunIf something waits for extern-C function pointer, you cannot pass &amp; of C++ function, and vice versa.<br>See <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch15/calc_oneh/prg.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch15/calc_oneh/prg.cpp" target="_self">full example</a>.<br>See <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch15/calc_multh/modules/parser/parser_impl.h" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch15/calc_multh/modules/parser/parser_impl.h" target="_self">full example</a>. Pay attention to including required dependencies in parser_impl.h header, it's a good practice.Useful tip: you can import each header as deep as it indeed is needed.Tip
+Use multi-header organization for large real programs to separate program into relatively small chunk (as small as possible) which programmer could cover in mind. It allow to maintain easier and compile faster. There is dependency analyzers. You can use this tool.
+Interesting approach: have two public interfaces: for average users, and for expert users.In general, approaches and number of headers are dependent on concrete cases.More often it's impractical and tedious to reorganize program to remove redundant declarations from multiple includes. So, we need find way to allow repeated inclusions of headers.Use the standard solution: #ifndef SOME_HEADER, #define SOME_HEADER, #endifRemember
+There is no namespaces for macros' names, so prefer long and ugly names! Even having include-guards on each header avoid ubiquitous inclusions! Note: if you define main() without args, you can't then use form with args.
+If there are global variables or uncaught exceptions things with main() are not so simple.You must know:
+There is no guaranteed order of globals' initialization among different TU
+There is no possibility to catch an exception on globals' initialization Several techniques exist for enforcing initialization order for globals among different TU, but none are both portable and efficient.
+Remark
+Dynamically linked libraries don't coexist happily with globals (that have complicated dependencies)
+One useful technique:1int&amp; x() // use ref!2{3	static int x_ = 0;4	return x_;5}RunYou have x() that is initialized on first invocation.Caution
+Unfortunately, this technique is not thread-safe.
+Keep in mind
+Initialization of local function static variable (since C++11) is thread-safe. But subsequent operations may cause a data race
+But...
+Global and member static initialization isn't thread safe at all! Use constexpr for compile-time initialization.
+Pay attention!
+Constexpr variables initialized by constexpr cannot depend on the values from other TU!
+Std
+The initialization of a statically allocated object with a constexpr (even implicit) is done at link time!
+To avoid problems of multi-thread access to statically allocated variable before it have finished its initializations you should:
+minimize use of statically allocated objects
+keep their initializations as simple as possible
+avoid dependencies on dynamically initialized objects in other TU
+Other useful techniques in order:
+use constexpr for initialize
+if use expressions, make sure they have no side effects
+initialize in a known single-threaded "startup phase" of computation
+use some form of mutual exclusion
+Repeat ways to terminate:
+return from main()
+exit()
+abort()
+throw an uncaught exception
+violate noexcept (so terminate())
+quick_exit()
+Info
+exit(), quick_exit(), abort() are declared in &lt;cstdlib&gt; Stroustrup
+There are other "bad" ways to terminate program, e.g. double_val / 0.0 in some old implementations.
+exit() calls destructors of statically allocated objects (that is useful), but try hard not to call exit() in destructors to avoid infinite recursion. Also, there is atexit(void(*)()). Take action to call on exit(), note: atexit() returns int meaning "has it had problems?".Rule
+order: T t1() -&gt; atexit(f) -&gt; T t2() -&gt; exit() -&gt; t2.~T() -&gt; f -&gt; t1.~T()
+quick_exit() and at_quick_exit() are similar, except that destructors are not involved.
+include header in file with implementation
+don't define global entities with the same name and similar-but-different meanings in different TU
+avoid non-inline functions defs in headers
+use #include only for global and namespace scopes
+#include only complete declarations
+use include guards
+make headers self-contained (make sure they can be compiled by themselves)
+distinguish between users' interfaces and implementers' interfaces
+avoid nonlocal objects that require run-time init. Especially for code intended for use as part of non-C++ programs
+]]></description><link>stroustrup-b./tc++pl.-tome-2.html</link><guid isPermaLink="false">engineering/compendium/Stroustrup B./TC++PL. Tome 2.md</guid><pubDate>Mon, 29 Dec 2025 13:04:08 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src="."&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[Kernighan & Ritchie — C PL]]></title><description><![CDATA[
+Should to note: C is not a strongly-typed, but still has type-checking! Earlier, you mustn't to explicitly interchange of pointers and integers, but now you must! Some operators have the wrong precedence!
+#include &lt;stdio.h&gt; int main()
+{
+printf("hello, world!\n");
+}
+C programm:
+functions statements variables
+Play with arithmetic:#include &lt;stdio.h&gt; // inline comment
+/* multiline comment */ int main(){ float f, c; int lower, upper, step; lower = 0; upper = 300; step = 20; f = lower; while (f &lt;= upper){ c = (5.0/9.0) * (f-32.0); printf("%3.0f %6.1f\n", f, c); f = f + step; }
+} int division truncates
+Available types:
+int, float, char, short, long, double
+while kinds:
+single statement: while (&lt;condition&gt;) &lt;statement&gt;;
+many statements: while (&lt;condition&gt;) {&lt;statement 1&gt;; &lt;statement 2&gt;; ...}
+arithmetic way depends on operand types:
+all integers -&gt; integer operation
+at least one float -&gt; convert ints to floats and float operation
+test it:
+#include &lt;stdio.h&gt; int main(){ printf("%d\n", 1/2); printf("%f\n", 1.0/2); printf("%f\n", 1.0/2.0);
+}
+some formatted output specs:
+%d - for int
+%ld - for long
+%f - for float and double
+%e - scientific notation of float
+%g - general notation of float
+%o - for octal
+%x - for hexadecimal
+%c - for character
+%s - for character string
+%% - for %-sign
+%p - for pointers
+Details directly from the book:
+format of conversion: %[-][5][.][7][h/l]?, where ? is special character:
+<img alt="Screenshot 2025-09-27 at 22.49.48.png" src="a9s/screenshot-2025-09-27-at-22.49.48.png" target="_self" style="width: 500px; max-width: 100%;">
+Width and precision can be set by int value:
+printf("%.*f", prec, floatval);There is an alternative version that prints in another string:1int sprintf(char *resstr, char *format, arg1, arg2, ...);
+All parts of for loop can be any expressions
+Preprocessor directives:1#include23#define4	#5	##6	... and __VA_ARGS__7#undef89#if10#ifdef11#ifndef12#elif13#else14#endif1516#error17#warning18#line19#pragma2021#Predefined macros:1__FILE__2__LINE__3__DATE__4__TIME__56__func__7__STDC__8__STDC_VERSION__Directive #define doesn't replace NAME in quotes nor as part of another name.First step io functions:
+getchar
+putchar
+they work with int
+Exercise "char counts":1#include &lt;stdio.h&gt;2#define CHARS_COUNT 25634int main(){5	char text[] = "hello world my dear man!";6	int chars[CHARS_COUNT];7	for(int i=0; i&lt;CHARS_COUNT; i++)8 chars[i]=0;910	for(int i=0; i&lt;sizeof(text); i++)11 chars[text[i]]++;12	for(int i=0; i&lt;CHARS_COUNT; i++)13 if (chars[i] !=0)14 printf("%c(%d) — %d\n",i,i,chars[i]);15}Used convention:
+parameter (formal argument) — for variable in function declaration/definition
+argument (actual argument) — for in call
+Some info about parameter names:1int power(int, int); // just declaration or function prototype2int main(){3	// some use of power(m, n);4}5int func(int base, int exponent){6	// definition...7}Attention!
+Strings end with \0 symbol!
+<br>Exercise "max line length, but max 50 symbols to show": <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/longest_line.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/longest_line.c" target="_self">Открыть файл</a>Automatic variables — term for local function variables.Available to set void in params list. Indeed, they must do so for explicit indication for compiler to check your calls of this function1int myfunc (void) // &lt;- !2{...}34int main()5{6	myfunc(); // can't be called without arguments7}Explicit declaration of global variable:1int main()2{3	extern int x;4}It's possible to omit extern if global var defined in this file:1#include &lt;stdio.h&gt;2int x=77;34int main()5{6	// omitted: extern int x;7	printf("%d\n", x);8}Don't use more than 31 symbol for names in C, it may cause problems for linking in older systems.Basic types:
+char, short, int, long, long long, float, double, long double.
+Integer types can be provided with signed or unsigned.Standard says: 8 ≤ char, 16 ≤ short ≤ int ≤ long ≤ long long, 32 ≤ long.Any suffixes and their types:1	int x = 1234;2	long x = 1234L;3	unsigned long x = 1234UL;4	float x = 12.3f, y = 12e-3f;5	double x = 3.4;6	long double = 3.4L;RunOctals and hexs:1int x = 010; // 8 (_10)2int x = 0xB; // 11 (_10)3unsigned long x = 0xFul;RunAll escape sequences:<br>
+<img alt="Screenshot 2025-09-20 at 01.48.06.png" src="a9s/screenshot-2025-09-20-at-01.48.06.png" target="_self">Concatenation is automatic:
+"conca" "tenation" == "concatenation"Important!1	"hello" == char[6]{'h', 'e', 'l', 'l', 'o', '\0'}Run1enum months{JAN=1, FEB, MAR}; // autoincrements!2MAR == 3RunNames in different enums must be unique, but inner values in the same enum must not.
+Also unnamed enums are valid:1enum {GREEN, RED, BLUE};Run
+External and static variables must be initialized once before program starts. With constant expression! Local variables is initialized on function call with expression.
+Externals/static has 0 as default value. But locals has not!
+Constants:1const double e = 2.71828182845905;2const char msg[] = "warning: ";34int strlen(const char message[]){...};RunRules only for signed operands, auto type conversions:<br>
+<img alt="Screenshot 2025-09-20 at 13.23.06.png" src="a9s/screenshot-2025-09-20-at-13.23.06.png" target="_self">Type conversion rules with unsigned is more complicated, because comparisons between signed/unsigned are machine-dependent. For example:1-1L &lt; 1U; // so 1U i-&gt;L2-1L &gt; 1UL; // so -1L L-&gt;ULRunFor function calls, when it doesn't have prototype (declaration with args), there are any more auto convertions:
+char, short —&gt; int
+float —&gt; double
+<br>See exercises with strings: <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/htoi.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/htoi.c" target="_self">htoi</a> and <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/squeeze.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/squeeze.c" target="_self">sqeeze</a>.
+Right bitwise shift of signed value fills with sign bits or 0-bits in machine-dependent way! For op= operator left-hand expression computes only once
+1-bits count is faster with:
+x &amp;= (x-1), which delete rightmost 1-bit!
+Type of ?:-expression is determined by the conversion rules. Be careful about order of computing different operand. For example in x = f() + g() there is no determined order in which functions are called!
+And one more example is:
+1f(n++, n*2); // wrong! There is no determined order for args evalRunOperators precedence:<br>
+<img alt="Screenshot 2025-09-20 at 15.44.51.png" src="a9s/screenshot-2025-09-20-at-15.44.51.png" target="_self">
+And shortcut:
+braces and attributes
+unary
+notbin arithmetic
+shifts
+comparison
+bin arithmetic
+boolean
+ternary ?:
+assignment
+comma-op
+If-else association:1if (...)2	if (...) // &lt;- second if3 statement_1;4	else // refers to second if5 statement_2;RunRight associativity:1x = cond1 ? (cond2 ? expr1 : expr2) : expr3;2y = cond1 ? expr1 : (cond2 ? expr2 : expr3);RunGood practice
+Add break; even in default section of switch
+switch:1switch(expression){2case 1: case 2:3	statements;4case 3:5	statement;6	break;7default:8	statement;9	break;10}Run<br>See exercise <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/escapes.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/escapes.c" target="_self">escapes</a>.Comma operator (parenthesis are required due = precedence is more than ,-precedence):1/* isn't for prod */23int x;4x = (2, 3.4, 7); // x becomes int 7RunMay use good practice:1do { // use braces for hastly reader of your code!2	only one statement;3} while (condition);Rungoto:1void func()2{3	goto label; // label must be in this func block4	5	label: // scopes this func block6	statements;7}RunRemainder: functions earlier was declared without params. And default return type was int.warning, but possible:1int f(){2	// no return statement3} // returns garbageRunThere is possibility to declare external function right in local scope of another function:1void f()2{3	int sum(int, int), sub(int, int);4	sum(1, 2);5}Runif func defined as:1// file: funcs.c23double func(){...}Runand used as:1// file: program.c23int main()4{5	int func();6	int x = func();7}Run
+Then func will be called with implicit type reinterpretation double-&gt;int. It's possible and dangerous!
+Attention!
+3.1234 will interpreted as 1078523464
+It's just treat double bits as int
+2 more risky moments:
+If there is no explicit declaration but calling some symbol like x = somefunc(int_a, int_b); compiler think somefunc returns int and worse of that, somefunc treat int_a and int_b with just type reinterpretation (type punning).
+declaration float func() is unknown params func, and onlyfloat func(void) is valid way!
+Interesting moment from Polish calculator program:1switch(type){2case '+':3	push(pop()+pop());4	break;5case '-':6	op2=pop();7	push(pop()-op2);8	break;9...10}RunTake attention at order for pop() and pop(): in 7'th line we can't use (pop()-pop()).<br>See the example with <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/ch4/stack.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/ch4/stack.c" target="_self">stack</a>. There are extern variables.For extern array declaration we usually don't use the size inside brackets:1extern int sp;2extern double stack[]; // there is no size, indeed it's optionalRunImportant!
+There is a tradeoff between the desire that each file have access only to the information it need for its job and the pactical reality that it is harder to maintain more header files.
+Thus, one .h is used by any files, and by user's code and your library realization.
+All modifiers:
+storage class specifiers auto (outdated)
+extern
+static
+register type qualifiers (may be inserted after *: int *const var;) const
+volatile
+restrict function specifiers extern
+static
+inline It's possible to mark function params and automatic variables with register to advise the compiler to place var in machine registers.But
+Compilers are free to ignore that advice.
+Example:1int func(register int a, int b)2{3	register float f;4}RunFor register-marked vars:
+only some types and numbers of variable can be register (machine-dependent)
+It's NOT possible to take the address of register variable
+You can declare and initialize variables in nested blocks, compiler move it declaration on top of enclosing function or optimize, but doesn't access any by scope rules. Example:1int func(){2	int i=0; // indeed `j` may be created here, or with `i` reuse3	for (int j=1; j&lt;5; j++){ // j can be accessed only in `for` body4 &lt;print(j)&gt;;5 // can access `i`6	}7	// can't access `j`, but it may be still alive8}RunAutomatic Initialization, when there is no declare+init statement.
+Static and extern — autoinit with 0
+Auto and register — undefined (i.e., garbage)
+For static:1static int a=7; // [const!] inited on start wherever it is23int func(){4	if (condition){5 static int b=dinamicval(); // (C99+) [dyn!] inited6 ... // at this line only 1 time7	}8}RunArrays may be initialized with braces, and then size may be omitted:1char message[] = {'H', 'i'}; // but "Hi" == {'H', 'i', '\0'}RunWhen and only when there is less values, the missing elements will be set to zero (for static, extern, and even auto):1int months[12] = {1, 2}; // == {1, 2, 0, 0, ..., 0}RunThere is new form (C99+):1int months[12] = {[0] = 1, [5] = 6}; // and zero at othersRunrecursion spends memory for calls stack, so it's not the most effective way, but often quite compact and easy to read/write/understand.<br>See ex. about <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/ch4/recursion.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/ch4/recursion.c" target="_self">recursion</a>.You can multiline your #define:1#define NAME some\2long textRunYou can use params:1#define SQUARE(X) X*XRunbut there are dangerous pitfalls:
+SQUARE(z+1) —&gt; z+1*z+1 — violation of operation order (so SQUARE(X) (X)*(X) can help)
+SQUARE(a++) —&gt; a++*a++ — unwanted double increment side effect
+and so on
+You can undef a macro:1#undef SQUARERunThere is stringify operator # in #define:1#define debug(expr) printf(#expr " = %g\n", expr)RunIt will replace x+y —&gt; "x+y".
+For valid token expr screens " and \ with \" and \\ accordingly.There is operator ## also for concatenate args:1#define glue(x,y) x ## y2glue(a+b,aby); // evaluated to `a+baby`, ##-adjacent spaces are removedRun(carefully: nested uses ## are arcane...)#if expr line may not include sizeof, casts, enum consts.
+If expr is not zero, lines until other if-macros are included.
+Can use:1#if defined(NAME)RunPattern for only once including section is:1#if !defined(HDR)2#define HDR34/* contents of hdr.h go here */56#endifRunSpecialized forms of #if defined(NAME) can be replaces as:1#ifdef2#ifndefRunUses macros from std library and special convention:1#include &lt;stdarg.h&gt;23void func(int lastnamed, ...)4{5	va_list ap; // pointer to each unnamed arg6	va_start(ap, lastnamed); // make ap point to 1st unnamed arg7	//usage:8	float x = va_arg(ap, float); // get explicit type value9	va_end(ap); // required finalization10}RunFrom legacy: char* was replaced with *void as a proper type of general pointer!It's possible to take address only for value in memory, so you can't:1int *p = &amp;4; // WRONG!2int *p = &amp;(4-VAL*2); // WRONG!3register int a = 7;4int *p = &amp;a; // WRONG!RunName of * in english is:
+indirection
+dereferencing
+Useful mnemonic
+Variable in declaration mimics the syntax in which the variable might appear
+Example:1double *dp, atof(char *);Run<br>In function you can affect caller args via address. See <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/ch5/getfloat.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/ch5/getfloat.c" target="_self">getfloat example</a>.
+Pointer version of arrays operations in general is faster (at least to the uninitiated)
+Pointer arithmetic works not literally, but address-wise. So int* + 1 increase real value by sizeof(int).Let a — array, and pa = &amp;a[0]
+Then value of array is equal to the address of first element:1a == &amp;a[0]RunFurthermore, compiler immediately converts:1a[i] —&gt; *(a+i)RunThus, you can use array with arithmetic (for addressing) and pointer with indexing (for dereferencing):1a+i; // a[i]2pa[i]; // a[i]RunBut keep in mind the difference
+An array name is not a variable, so it's not a modifiable lvalue, and it's wrong:
+a = pa; (can't assign to array)
+a++; (can't modify value)
+In fact, these parameters are equal:1void f(char a[]); // indeed is char *a, но неизменяемый!2void g(char *ap); // used more often, because allow the self-value changesRunOh My God! The incredible insight!
+All const literal data (except for ordinal small numbers) has its own place at bytecode in .rodata (read only data). Thus, there are something like: 19384717236L
+"Hello, world!"
+{1,2,3,4,5,6,7,8,9,10} But remember, you can't do something like:
+char* str = "hello"; str[0] = 'H';
+It causes bus error or other!
+For func void print(char* str); each of the next is valid:
+print("Hello, world"); // string constant
+print(array); // char array[100]
+print(ptr); // char *ptr
+With syntax sugar (that compiler implicit replace f(int []arr); with f(int* arr);) it's possible to call:1f(ap+2);2f(&amp;ap[2]);RunBut you can't:1int array[] = ap; // WRONG!RunBecause array is always memory allocation by compiler, not just refer to some place. See more at two sections ahead.Note
+If one is sure, it's also possible to index backwards: a[-1], a[-2], and so on.
+Pointers and integers are not interchangeable! The sole exception is 0. There is a special const:1#include &lt;stdio.h&gt;2NULL; // == 0, for special meaning of specific pointerRunBut note: NULL is just macro, not a part of the language.
+Note: pointers arithmetic or comparisons work properly for 0, addresses of the same array and address of the first element past the end of this array.
+There are special types in C:
+ptrdiff_t for pointers' difference
+size_t for sizeof result
+There is an important difference between definitions:1char amessage[] = "Hello!"; // is [H e l l o ! \0]2char *pmessage = "Hello!"; // just [ ] -&gt; .rodata{H e l l o ! \0}RunWow
+For string copy until '\0' is gotten, there is a pretty pattern:
+while (*s++ = *t++);
+Because '\0' is 0 and 0 is false for boolean-comparison
+<br>See exercise <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/ch5/strend.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/ch5/strend.c" target="_self">strend</a>.<br>See line sorting with array of pointers: <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/ch5/sortlines.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/ch5/sortlines.c" target="_self">exercise</a>.One important peculiarity, compiler must know step for pointer increment:1void func(int arr[2][6][8]){...}2≈3void func(int arr[][6][8]){...} // possible to ommit first dimension4// but only first!56// Same as for extern arrays:7extern int arr[7][5];8extern int arr[][5]; // valid9extern int arr[][]; // WRONG!RunModern way:1void func(int x, int y, int z, int arr[x][y][z]){...}Run
+Multi-dimensional (MD) arrays are stored sequentially, so you can send 3-dimensional array to function, that waits for a 1-dimensional.
+But: if MD array allocated dynamically, its elements may be not sequential in the memory.There is difference between:1int a[10][20];2int *b[10];RunIn the former — memory is allocated actually (200 ints), in the latter — just 10 pointers are really stored. Eval a[1] don't loads memory for a, but b[1] loads value of b, see asm:1ldr w8, [sp, #28] ; read a[1]vs.1ldr x8, [sp, #16] ; b &lt;- not hardcoded and need to be gotten from memory2ldr w8, [x8, #4] ; b[1]1// myprogram hello, world2int main(int argc, char *argv[])3{4	// argc == 35	// argv[0] —&gt; myprogram6	// argv[1] —&gt; hello,7	// argv[2] —&gt; world8	// argv[3] == 0 (nullptr) — that standard requires9}RunFunction, in fact, is address already, so:1&amp;func == func // same as arr==&amp;arrRunIn C, a function is not a variable, but it's possible to define a pointer to function:1void sort(int (*comp)(void*, void*), void *elements[]){2	...3	(*comp)(p1, p2); // should be unreferenced for call4	...5}6int direct_order(char *a, char *b); extern char *elements[];78// send `direct_order` to `sort`9sort((int (*)(void*,void*))direct_order, (void**)elements);Run<br>See huge example <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/ch5/sortlines.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/ch5/sortlines.c" target="_self">sortlines</a>.This example has shown the important moment: we can't cast (char *lines[100]) even to (char*[]) because it is cast from complete type to incomplete type.
+It's possible to cast to incomplete type in some rare cases (from GPT):
+complete * —&gt; incomplete * (it casts a pointer)
+incomplete —&gt; incomplete
+The reason of complicated declaration is that C syntax is an attempt to make the declarations and the use agree! (I write as i read)Precise C cpecification
+The precise grammar that specifies a declarator (dcl) uses BNF-grammar
+Simplified form is:1dcl: optional *'s direct-dcl2direct-dcl: name3 (dcl)4 direct-dcl()5 direct-dcl[optional size]For instance:
+(*pfa[])()
+Illustration of the parsing with a parse tree:<br>
+<img alt="Screenshot 2025-09-25 at 02.53.33.png" src="a9s/screenshot-2025-09-25-at-02.53.33.png" target="_self" style="width: 400px; max-width: 100%;">Basic view:1struct point {2	int x; // structure member3	int y;4}; // Pay attention to the semicolon!Run
+Note: struct name (which is often called structure tag) is optional
+Important
+You must use ";" at the end of struct declaration.
+It is statement! (All statements must be ended with ";")
+Structure name, its member name and also an ordinary variable can have the same name! (since they can always be distinguished by context)Declaration and definition forms:1struct point {2	int x;3	int y;4} p1, p2;5struct point p3 = {7, -3}; // with initializationRunImportant
+In C, type name is struct point, not just point
+For access a member they use operator ".":1printf("%d\n", p2.y);RunStructures can be nested:1struct rect {2	struct point pt1;3	struct point pt2;4};RunThe only legal operations on a structure:
+copying
+assigning
+take address &amp;
+access members "."
+In C99+ you can:1struct point{int x; int y;} p;2p = (struct point){1, 2};RunStructure parameters are passed by value like any others.Ways to access structure members:1struct rect r, *rp = &amp;r;2r.pt1.x;3rp-&gt;pt1.x;RunYou can initialize in-place:1struct key {2	char *word;3	int count;4} keytab[] = { // empty brackets ([])5	"auto", 0, // no nested braces ({})6	"break", 0,7	...8}RunImportant: sizeof is a compile-time operator that can be used to compute size of any object in bytes:1sizeof object // variable, array or structure. Not typename2sizeof (typename)3// pay attention to these two different formsRunA good way to define compile-time determinated array is macro, that protects from type changes:1#define ARRLENGTH (sizeof arr / sizeof arr[0]) // or / sizeof (&lt;el type&gt;)RunNote: sizeof can't be used in #if, because the preprocessor does not parse type names.<br>See example <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/ch6/countwords.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/ch6/countwords.c" target="_self">countwords</a>. It also applies to later subparagraphs.Don't assume that size of a structure is the sum of the sizes of its members. Alignment may be involved by compiler. Use: sizeof (struct mystructurename).You can use this prettified form for long return types (on your taste):1struct mystructurename *2func(...&lt;params&gt;)Run
+It's illegal to put a struct in itself declaration, but it's legal to put a pointer to this struct.
+1struct s{2	struct s next; // WRONG3	struct s *next; // valid4}RunYou can cycle structures, but best practice is to declare latter before:1struct b; // forward declaration, good to use!23struct a { struct b *p; };4struct b { struct a *p; };Run<br>See example <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/c/KR/ch6/hashtable.c" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/c/KR/ch6/hashtable.c" target="_self">hashtable</a>.You can define type synonyms:1typedef int *const Ints[10]; // you must set array size. Incomplete types2 // are not allowed34//usage:5Ints ints = {&amp;a, &amp;b}; // first 2 are inited with adressesRunMore complicated example:1typedef struct tnode *Treeptr;23typedef struct tnode { // note: struct tnode type is defined too!4	char *word;5	int count;6	Treeptr left;7	Treeptr right;8} Treenode;RunNote
+typedef just adds a new name for some existing types, thus it is a simple textual substitution, but more efficient than #define
+Besides purely aesthetic issues, there are two main reasons for using typedef:
+portability (e.g. size_t, ptrdiff_t)
+better documentation
+Important
+There are 2 types of alignment: internal (within a structure), external (among memory addresses).
+Union variables may hold (at different times) objects of different types and sizes, with the compiler keeping track of size and alignment requirements:1union data{2	int ival;3	float fval;4	char *sval;5} var;RunFacts:
+syntax based on structures
+var is large enough to hold the largest of member types
+responsibility is on programmer: store/retrieve the correct type
+specific var size and misusing error is machine-dependent
+access elements just as for structures (. and -&gt;)
+Union may only be initialized with value of the type of its first member, or in C99+:1union Data {2 int i;3 float f;4}5union Data d = {.f = 3.14f}; // designated initializerRunFor avoid bit-work with masks and bit-wise arithmetic you can use:1// declaration:2struct {3	unsigned int is_keyword : 1;4	unsigned int is_extern : 1;5	unsigned int is_static : 1;6} flags;78// usage:9flags.is_extern = flags.is_static = 1;10if (flags.is_extern == 0 &amp;&amp; flags.is_static == 0)11	&lt;then ...&gt;;RunBe careful:
+almost everything about bit-fields is implementation-dependent (whether a bit-field may overlap a word boundary; assignation left-right or right-left). You should not to pick apart externally-defined data. Use unsigned for portability
+bit-fields may be unnamed for manual padding, special width : 0 may be used to force alignment at the next word boundary (machine word)
+can be declared only as int (and _Bool for new standards)
+can't be referenced with &amp;
+]]></description><link>kernighan-&amp;-ritchie-—-c-pl.html</link><guid isPermaLink="false">engineering/compendium/Kernighan &amp; Ritchie — C PL.md</guid><pubDate>Sun, 28 Dec 2025 23:41:33 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src="."&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[TC++PL. Tome 1]]></title><description><![CDATA[C++ is based on the idea of providing both:
+direct mappings of build-in operations and types ti hardware to provide efficient memory use and efficient low-level operations, and
+affordable and flexible abstractions mechanisms to provide user-defined types with the same notation support, range of uses&lt; and performance as build-in types. C++ is a language for developing and using elegant and efficient abstractions. C++ concentrates on system programming. C++ follows zero-overhead principle.
+Note
+Don't assume that something laboriously written in C style is more efficient than a shorter alternative. Often, the opposite is true.
+Aims for the C++11 effort were:
+Make C++ a better language for systems programming and library building
+Make C++ easier to teach and learn
+Also to introduce concurrent systems programming type-safe and portable (new memory model, facilities for lock-free programming)
+Most widely useful features of C++11:
+=delete, =default
+auto (type deducing)
+constexpr
+move semantic
+noexcept
+range-for statement
+final and override
+enum class
+About new features of standard library:
+unordered_map and so on
+thread, mutex, lock
+future, promise, async()
+garbage collector interface
+regexp
+random numbers
+unique_ptr (originally called move_ptr, auto_ptr)
+shared_ptr (originally counted_ptr)
+tuple
+bind()
+function type
+C++ is considerable to have unique strengths in the area of infrastructure software.
+represent ideas directly in code
+aim: elegant and efficient
+don't overabstract
+try elegant and efficient abstractions from libraries
+represent relations directly in code
+represent independent ideas separately in code
+C++ is not just object-oriented
+C++ is not just for generic programming
+prefer solutions that can be statically checked (compile-time preference)
+make resources explicit (as class objects)
+express simple ideas simply
+use libraries. don't build everything from scratch
+use type-rich style of programming
+don't avoid high-level abstractions out of fear of performance problems
+if data has an invariant — encapsulate it
+C++ is not just C with a few extensions
+The ISO C++ standard defines two kinds of entities:
+Core language features (build-in types, loops, etc.)
+Standard-library components (containers, I/O operations)
+see: <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch2/helloworld.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch2/helloworld.cpp" target="_self">hello world</a>.C++ introduces bool type.Different ways to initialize:1int i = 2.3; // truncates to 22int i {2.3}; // error3int i = {2.3}; // error
+Don't introduce a name until you have a suitable value for it! Even using user-defined types
+type can be deduced from the initializer:1auto b = true;2auto ch = 'x';3auto i = 123;4auto d = 1.2;5auto z = sqrt(y); // gets type from sqrt resultContrary
+With auto we use =, not {} syntax for init
+Specific reasons to use explicit type declaration:
+for readability (in large scopes)
+be explicit about range or precision (e.g., double rather than float)
+There are two notions of immutability:
+const — "I promise not to change this value"
+constexpr — "To be evaluated at compile time"
+It's possible to define constexpr functions:1constexpr double square(double x){ return x*x; }It calls will be evaluated on compile timeWarning
+To be a constexpr function must include only return statement. (But see also consteval in C++20)
+constexpr functions may be called with no-constexpr args.In few places it must be constexpr:
+array bounds
+case labels
+some template arguments
+constants declared using constexpr
+New range-for-statement:1int v[] = {0,1,2,3,4,5,5,6,7,8,9};23for (auto x : v)4	cout &lt;&lt; x &lt;&lt; '\n';56for (auto x : {10, 20, 30}) // even for in-place defined arrays7	cout &lt;&lt; x &lt;&lt; '\n';It's also possible to have the objects themself, not copy:1int v[] = {0,1,2,3,4,5,5,6,7,8,9};23for (auto&amp; x : v)4	++x;About &amp;
+A reference cannot be made to refer to a different object after its initialization
+C++ introduces nullprt:1double* dp = nullptr;2Link&lt;Record&gt;* lst = nullptr;In declaration operators &amp;, *, [], () (invokation) are called declarator operators.
+Built-in types — fundamental types and their derivatives built from them, const and declarator operators.Unlike in C, in C++ struct types can be referred just by name:1struct Vector {2	int sz;3	double* elem;4};56Vector v; // not `struct Vector v;`A way to dynamically allocate memory and init Vector:1void vector_init(Vector&amp; v, int s)2{3	v.elem = new double[s];4	v.sz = s;5}Runnew allocates from the free storage | dynamic memory | heap.Example:1class Vector {2public:3	Vector(int s) : elem{new double[s]}, sz{s} {}4	double&amp; operator[](int i) {return elem[i];} // no `&amp;`?5	int size() {return sz;}6private:7	double* elem;8	int sz;9};1011//usage:12Vector v(6);RunC++ introduces enum class that is not just enum (plain enum) from C, but is its extended version:1enum class Color {red, blue, green};2enum class Light {green, yellow, red};34// usage:5Color c = Color::red;6Light l = Light::red;RunAn enumeration is a user-defined type so we can define operators for it:1Light&amp; operator++(Light&amp; l) // prefix form(!)2{3	switch(l){4	case Light::green: return l = Light::yellow;5	case Light::yellow: return l = Light::red;6	case Light::red: return l = Light::green;7	}8}910//usage:11Light l = Light::yellow;12Light next = ++l;RunDS says: a program consists of entities: variables, functions, types. Declaration — all that compiler needs.Example without any definitions. There are only declaration (interface):1double sqrt(double);23class Vector {4public:5	Vector (int s);6	double&amp; operator[](int i);7	int size();8private:9	int sz;10	double* elem;11};RunDS says: inside a namespace you can put everything you can put into global space.For not to conflict with global names from std you can use namespaces. Example:1namespace My_code {2	class complex{3 ...4	};5	complex sqrt(complex);6	int main();7}89int My_code::main()10{11	complex z1 {1, 2}; // not My_code::complex, just complex12	auto z2 = sqrt(z1);13}1415int main()16{17	return My_code::main();18}Runusing-directive:1using namespace std;RunYou can just throw in critical section:1double&amp; Vector::operator[](int i)2{3	if (i&lt;0 || i &gt;= size())4 throw out_of_range{"Vector::operator[]"};5	return elem[i];6}78// usage, later:9try {10	v[v.size()] = 7; // throws exception11}12catch (out_of_range) {13	... // handle exception14}RunSome stable state of correct class object must be observed. It's work for a constructor to set invariant, and public methods must to maintain the invariant (at least on the return). And then destructor can rely on that invariant.On the compile time:1// first arg must be constexpr2static_assert(sizeof(int)&gt;=4, "integers are too small"); // check type sizeRunOften used in generic programming for make assertions about concrete types.
+You don't have to know every detail of C++ to write good programs
+Focus on programming techniques, not on language features
+Classes in C++ divided on:
+abstract classes
+concrete classes
+There is an ordinary example. Pay attention to const method of class, such one can not to change object at all:1class complex {2	double re, im;3public:4	complex(double r, double i) : re{r}, im{i} {}5	complex(double r) : re{r}, im{0} {}6	complex() : re{0}, im{0} {}78	void real(double d) {re=d;}9	void imag(double d) {im=d;}10	double real() const {return re;}11	double imag() const {return im;}1213	complex&amp; operator+=(complex z) {re+=z.re, im+=z.im; return *this;}14	complex&amp; operator-=(complex z) {re-=z.re, im-=z.im; return *this;}15	complex&amp; operator*=(complex); // just declaration16	complex&amp; operator/=(complex); // just declaration17};RunWow
+Function defined (not declared) in a class are inlined by default!
+<br>see about inline: <a data-href="🔗 С++ all modifiers#^inlinevar" href="engineering/c++-essentials/🔗-с++-all-modifiers.html" class="internal-link" target="_self" rel="noopener nofollow">🔗 С++ all modifiers &gt; ^inlinevar</a>
+By defining a default constructor you eliminate the possibility of uninitialized variables of that type (complex).
+Operations that don't require direct access to the representation can be defined separately (out of class):1complex operator+(complex a, complex b) {return a+=b;}2complex operator-(complex a, complex b) {return a-=b;}3complex operator-(complex a) {return {-a.real(), -a.imag()};} // unary minus4bool operator==(complex a, complex b) {5	return a.real()==b.real() &amp;&amp; a.imag()==b.imag();6}RunNote: a+=b doesn't change the original because param a is considered as a copy.1//usage:2complex a {2.3};3complex b {1/a}; // copy?4complex c {a + z*complex{1, 2.3}};5if (c!=b) {...}Run<br>see <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch3/mycomplex.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch3/mycomplex.cpp" target="_self">example</a>.Destructor example:1class Vector{2private:3	double* elem;4	int sz;5public:6	Vector(int s) : elem{new double[s]}, sz{s} {7 for (int i=0; i!=s; ++i) elem[i]=0;8	}9	~Vector() {delete[] elem;}10	double&amp; operator[](int i);11	int size() const;12};Rundef
+RAII (Resource Acquisition Is Initialization) — the technique of acquiring resources in a constructor and releasing them in a destructor
+For use {1, 2, 3} form you need use std::initializer_list&lt;T&gt;. Example:1class Vector{2public:3	Vector(std::initializer_list&lt;double&gt;);4	void push_back(double);5};RunAlso you can use stream:1Vector read(istream&amp; is)2{3	Vector v;4	for (double d; is&gt;&gt;d; )5 v.push_back(d);6	return v;7}RunDS says:<br>
+<img alt="Screenshot 2025-09-29 at 04.15.37.png" src="a9s/screenshot-2025-09-29-at-04.15.37.png" target="_self" style="width: 300px; max-width: 100%;">
+For abstract classes we must allocate objects on the heap and access them through references or pointers, because we do not even know the size of an object.
+Abstract class example:1class Container { // this class is a pure interface2public:3	virtual double&amp; operator[](int) = 0; // pure virtual func4	virtual int size() const = 0;5	virtual ~Container() {}6};Rundef
+virual means "may be redefined lated in a class derived from this one".
+def
+pure virtual function =0 means that some class derived from Container must define the function.
+def
+Abstract class is a class with a pure virtual function.
+def
+Polymorphic type is a class with a virtual function.
+Important
+Polymorphic types have a virtual destructor because they (their instances) tend to be manipulated through references/pointers, and someone destroying an instance (with ref type) has no idea what resources must be released.
+Realization example:1class VectorC : public Container {2	Vector v;3public:4	VectorC(int s): v(s) {}5	~VectorC() {} // override6	double&amp; operator[](int i){return v[i];} // override7	int size() const {return v.size();} // override8};RunNote
+Member (v) destructor ~Vector() is implicitly invoked by its class's destructor (~VectorC())
+Usage:1void use(Container&amp; c)2{3	const int sz = c.size();4	for (int i=0; i!=sz; ++i)5 cout &lt;&lt; c[i] &lt;&lt; '\n';6}78void func()9{10	VectorC vc {0,1,2,3,4,5};11	use(vc); // as Container&amp;, not VectorC&amp;12}RunThe usual implementation technique for selecting the right realization of the virtual function is converting of virtual function names into indices into a table of pointers to functions. This table is called the virtual function table or just vtbl. Each class with virtual functions has its own vtbl identifying its virtual functions.
+Graphically:<br>
+<img alt="Screenshot 2025-09-29 at 15.56.15.png" src="a9s/screenshot-2025-09-29-at-15.56.15.png" target="_self" style="width: 600px; max-width: 100%;">This mechanism is almost as efficient as the normal function call, but is slower within 25%.
+About memory: +1[] for each class and +1* for each instance.Helpful to know!
+GPT says: in general, all functions from base-class and in derived-class, even if they have the same signatures (override), are different in the machine code
+For hierarchy Shape -&gt; Circle -&gt; Smiley you can access super-classes:1void Smiley::draw()2{3	Circle::draw();4	for (auto p: eyes)5 p-&gt;draw(); // Shape::draw6	mounth-&gt;draw(); // Shape::draw7}Run
+Note: virtual destructor is necessary, because delete is often used with pointer to a base class.
+Note: concrete destructor (called by vtbl) implicitly invokes the destructors of base classes and members.
+A class hierarchy offers two kinds of benefits:
+Interface inheritance
+Implementation inheritance
+If user of Shapes forget to delete them, it cause memory leak. For this case there is:1{2	auto s = unique_ptr&lt;Shape&gt;{new Circle{p, r}};3} // s is deleted hereRun1void test(complex z1)2{3	complex z2{z1}; // copy initialization4	complex z3;5	z3 = z2; // copy assignment6}RunFor simple types memberwise copy is often used. But for some Containers it is not the right semantic, and for abstract types it almost never is.Strong hint
+The fact that Vector has a destructor hints that the default (memberwise) copy semantic is wrong
+Copying of objects is defined by:1class Vector {2private:3	double* elem; // 1st to init4	int sz; // 2nd to init5public:6	Vector(int s);7	~Vector() {delete[] elem;}8	Vector(const Vector&amp; a); // copy constructor9	Vector&amp; operator=(const Vector&amp; a); // copy assignment1011	double&amp; operator[](int i); // for commmon objects12	const double&amp; operator[](int i) const; // for const objects1314	int size() const;15};RunRealization examples:1Vector::Vector(const Vector&amp; a)2	:elem{new double[a.sz]},3	sz{a.sz}4{5	for (int i=0; i!=sz; ++i)6 elem[i] = a.elem[i];7}89Vector&amp; Vector::operator=(const Vector&amp; a)10{11	doubple* p new double[a.sz];12	for (int i=0; i!=a.sz; ++i)13 p[i] = a.elem[i];14	delete[] elem; // IMPORTANT15	elem = p;16	sz = a.sz;17	return *this; // predefined Class* this;18}RunOn return from function Vector ...(...)...{...return v;} object Vector is copied, and for large data it is pointless. To state intent we want to move it rather than copy there is:1class Vector {2	// ...3	Vector(const Vector&amp; a); // copy constructor4	Vector&amp; operator=(const Vector&amp; a); // copy assignment5	6	Vector(Vector&amp;&amp; a); // move constructor7	Vector&amp; operator=(Vector&amp;&amp; a); // move assignment8};910Vecto::Vector(Vector&amp;&amp; a)11	:elem{a.elem}, // "grab the element" from a12	sz{a.sz}, // "grab the element" from a13{14	a.elem = nullptr; // now `a` has no elements15	a.sz = 0;16}RunFor that definition compiler will chose the move constructor to implement the transfer of the return value out of the function.For clarifying various types, GPT+DS says:1* — pointer2&amp; — lvalue-reference3&amp;&amp; — rvalue-reference45// special rule:6const T&amp; — can be attached to rvalue78NRVO (Named Return Value Optimization)RunImportant
+After a move, a moved-from object (grabbed) should be in state that allows a destructor to be run.
+Typically, we should also allow assignment to a moved-from (grabbed) object.
+If value will not be used again (that is not obvious for the compiler), you can:1Vector f()2{3	Vector a(100);4	Vector y(100);5	Vector z(100);6	z = x; // move7	y = std::move(x); // move (specified), returns an Vector&amp;&amp;8	return z; // move9}RunOn return x is empty from line 7, z is empty from line 8, and then x,y,z are destroed.Vector, std::thread — resource handles, and move semantic makes its an alternative to using pointers in many cases.In fact, unique_ptr and others are themselves resource handles.Replacing new/delete with move semantic may achieve strong resource safety; that is we can eliminate resource leaks for a general notion of resource (e.g., vectors for data, threads for sys threads, and fstreams for file handles)One (but not the only) example when we don't wanna copy object: base class in class hierarchy. Then the best thing to do is usually to delete the default copy/move constructors:1class Shape{2public:3	Shape(const Shape&amp;) = delete; // no copy constr4	Shape&amp; operator=(const Shape&amp;) = delete; // no copy assign56	Shape(Shape&amp;&amp;) = delete; // no move constr7	Shape&amp; operator=(Shape&amp;&amp;) = delete; // no move assign89	~Shape(); // &lt;- (read note below)10}RunNote
+If user has explicitly declared destructor, the compile will not implicitly generate move operations. Furthermore:
+move — not generated!
+copy — generated, but deprecated! (will warn)
+def
+template is a class or function that we parametrize with a set of types or values
+Example:1template&lt;typename T&gt;2class Vector {3private:4	T* elem;5	int sz;6public:7	Vector(int s);8	~Vector() {delete[] elem;}9	// copy/move operations10	T&amp; operator[](int i);11	const T&amp; operator[](int i) const;12	int size() const {return sz;}13};RunDefining member functions:1template&lt;typename T&gt;2Vector&lt;T&gt;::Vector(int s)3{4	if (s&lt;0) throw Negative_size{};5	elem = new T[s];6	sz = s;7}89template&lt;typename T&gt;10const T&amp; Vector&lt;T&gt;::operator[](int i) const11{12	if (i&lt;0 || size()&lt;=i)13 throw out_of_range{"Vector::operator[]"};14	return elem[i];15}RunAnd now we can use generic objects:1Vector&lt;char&gt; vc(200); // 200 chars2Vector&lt;string&gt; vs(17); // 17 strings3Vector&lt;list&lt;int&gt;&gt; vli(45); // 45 lists of intsRun(About C++98 you couldn't use &gt;&gt;, then they used additional blank: &lt; list&lt;int&gt; &gt;)For support for-range loop you must define begin() and end():1template&lt;typename T&gt;2T* begin(Vector&lt;T&gt;&amp; x)3{4	return x.size()? &amp;x[0]: nullptr;5}6template&lt;typename T&gt;7T* end(Vector&lt;T&gt;&amp; x)8{9	return begin(x) + x.size();10}RunThen use:1void write(const Vector&lt;string&gt;&amp; vs) // strings vector2{3	for (auto&amp; s: vs) // for-range4 cout &lt;&lt; s &lt;&lt; '\n';5}RunFunction compile-time type parametrization:1templace&lt;typename Container, typename Value&gt;2Value sum(const Container&amp; c, Value v)3{4	for (auto x : c)5 v+=x;6	return v;7}RunUsage:1void use(Vector&lt;int&gt;&amp; vi, std::vector&lt;complex&lt;double&gt;&gt;&amp; vc)2{3	double s = sum(vi, 0.0); // add to double4	// note: not sum&lt;Vector&lt;int&gt;, double&gt;(...), just sum(...)5	auto z = sum(vc, complex&lt;double&gt;{});6}Runnote again: type arguments for sum are deduced from call arguments.def
+function object as known as functor is object that can be called like functions.
+Example:1template &lt;typename T&gt;2class Complt {3	const T val;4public:5	Compwith(const T&amp; v) : val(v) {}6	bool operation()(const T&amp; x) const {return x&lt;val;}7};89// use as predicate:1011template&lt;typename C, typename P&gt;12int count(const C&amp; c, P predicate){13	int cnt=0;14	for (const auto&amp; x: c)15 if (predicate(x))16 ++cnt;17	return cnt;18}1920void use(){21	int x = 42;22	string s = "Backus";23	Complt&lt;int&gt; lti{x}; // def: policy object24	Complt&lt;string&gt; lts{s}; // too2526	const Vector&lt;int&gt;&amp; vi = ...;27	const list&lt;string&gt;&amp; ls = ...;2829	cout &lt;&lt; count(vi, lti) &lt;&lt; '\n';30	cout &lt;&lt; count(ls, lts) &lt;&lt; '\n';3132	// or in-place with lambdas:33	cout &lt;&lt; count(vi, [&amp;](int a){return a&lt;x;}) &lt;&lt; '\n';34	cout &lt;&lt; count(ls, [&amp;](const string&amp; a){return a&lt;s;}) &lt;&lt; '\n';35}Run
+[&amp;] in lambda expression is called a capture list, that specifies that local names used (as x) will be passed by reference.
+Possible types of capture:
+[&amp;x] — concrete by reference
+[=x] — concrete by copy
+[] — capture nothing
+[&amp;] — all local names by reference
+[=] — all local names by value
+We can separate the traversal of our container from the specification of what is to be done with each element:1// class ≈ typename2template&lt;class C, class Oper&gt; // assume C is a Container of pointers3void for_all(C&amp; c, Oper op)4{5	for (auto&amp; x: c)6 op(*x); // x is T* and is taken by reference(&amp;), so *x is just x7}89void use()10{11	vector&lt;unique_ptr&lt;Shape&gt;&gt; v; // may be vector&lt;Shape*&gt;12	while (cin)13 v.push_back(read_shape(cin));14	for_all(v, [](Shpae&amp; s){s.draw();} ); // x is got by reference(&amp;)15	for_all(v, [](Shape&amp; p){s.rotate(45);} );16}RunAs known as variadics.
+Example:1void func() {} // do nothing23template &lt;typename T, typename... Tail&gt;4void func(T head, Tail... tail) // `func` name again!5{6	g(head); // do something, in fact, on each argument7	func(tail...); // try again with tail, at some time here is f()8}RunGPT says: SFINAE — Substitution Failure Is Not An Error.Examples:1using size_t = insigned int;23// Every std contained defines such this:4template&lt;typename T&gt;5class Vector{6public:7	using value_type = T;8...9};1011// type of element:12template&lt;typename C&gt;13using eltype = typename C::value_type;14// and then:15templace&lt;typename Cont&gt;16void func(Cont&amp; c)17{18	Vector&lt;eltype&lt;Cont&gt;&gt; vec;19	// or explicit: Vector&lt;typename Cont::value_type&gt; vec;20}2122// predefined types:23template&lt;typename V&gt;24using stringmap = Map&lt;string, V&gt;;25//and then:26stringmap&lt;int&gt; m; // m has type: Map&lt;string, int&gt;Run
+express ideas directly in code
+define classes to represent concepts
+use concrete classes to represent simple concepts and performance-critical components
+avoid naked new/delete
+use resource handles and RAII to manage resources
+use abstract classes to fully separate interface from implementation
+use class hierarchies to represent hierarchical concepts
+using hierarchy you should distinguish between implementation inheritance and interface inheritance (impl-inher / interf-inher)
+control constr/copy/move/destr of your class
+return containers by value (relying on move for efficiency)
+provide strong resource safety (never leak resources)
+use container for resource handles
+use templates for general algo/data
+use functors/lambdas to represent policies/actions
+use type aliases and template aliases
+The facilities provided by the standard library can be classified like this:
+run-time language support (allocation, run-time type info)
+the C standard library
+strings, i/o streams (are extensible framework), localization
+containers framework, types/algorithms — called STL, is extensible
+numerical computations (math funcs, complex, vectors with arithmetic, random)
+regex
+concurrency (thread, lock). It is foundational (so you can add support for new models)
+utilities to support templates, STL-style generic programming, generals (clock and others)
+"smart pointers", interface for GC
+Special-purpose containers (array, bitset, tuple)
+All of them included because:
+helpful to almost every C++ programmer
+provided in a general form and have not significant overhead
+simple to use, easy to learn (but solves complex tasks)
+The standard library is defined in a namespace called std for all headers (#include string, list, complex and others...)
+Standardized C++98 introduce new headers without .h extension, so: string.h — old C code, string — new modern code of C++
+Selection of std headers:<br>
+<img alt="Screenshot 2025-10-01 at 02.55.34.png" src="a9s/screenshot-2025-10-01-at-02.55.34.png" target="_self" style="width: 400px; max-width: 100%;"><br>
+<img alt="Screenshot 2025-10-01 at 02.56.03.png" src="a9s/screenshot-2025-10-01-at-02.56.03.png" target="_self" style="width: 600px; max-width: 100%;">Standard strings are mutable (s+="tail") and have move constructor (so it is efficient to return strings by value).
+Some useful methods:
+.substr(...) returns new string
+.replace(...) modify string&amp;
+operator==(...)
+The output can be extended for user-defined types (easier than input)There are two out streams: cout and cerr.
+A whitespace character by default terminates the read.
+For reading whole line use:1string std;2getline(cin, str); // cin == "Hello world";RunImportant
+getline(...) reads and terminating \n char, but not include it in the result.
+GPT: It should be said: struct and class are almost equivalent. Differences:
+by default struct fields are public, class fields — private. The same is with default inheritance
+struct without private members, constructors and destructors allow aggregate initialization: Point p{10, 20};
+use struct for simple data, and class for objects with encapsulation and logic
+Define io for custom types:1struct Entry{2	string name;3	int number;4};56ostream&amp; operator&lt;&lt;(ostream&amp; os, const Entry&amp; e)7{8	return os &lt;&lt; "{\"" &lt;&lt; e.name &lt;&lt; "\", " &lt;&lt; e.number &lt;&lt; "}";9}1011istream&amp; operator&gt;&gt;(istream&amp; is, Entry&amp; e)12{13	char c, c2;14	if (is&gt;&gt;c &amp;&amp; c=='{' &amp;&amp; is&gt;&gt;c2 &amp;&amp; c2=='"') {15 string name;16 while (is.get(c) &amp;&amp; c!='"') // analogue of C getchar(char *)17 name += c;18 19 if (is&gt;&gt;c &amp;&amp; c==','){20 int number = 0;21 if (is &gt;&gt; number &gt;&gt; c &amp;&amp; c=='}'){22 e = {name, number};23 return is;24 }25 }26	}27	is.setstate(ios_base::failbit);28	return is;29}3031// now available:32for (Entry e; cin&gt;&gt;e; )33	count &lt;&lt; e &lt;&lt; '\n';RunRemember
+is &gt;&gt; c skips whitespace by default
+if (is &gt;&gt; c) test whether input was successfully read.Vector example:1vector&lt;Entry&gt; book = {2	{"Jane", 625},3	{"Dima Prima", 93041}, // trailing comma is allowed in many cases4};56// add entries:7for (Entry e; cin&gt;&gt;e; )8	book.push_back(e);910vector&lt;Entry&gt; book2(50); // 50 entries {"", 0}11vector&lt;Entry&gt; book3(30, {"x", 123}); // 30 entries {"x", 123}1213for (const auto&amp; e: book)14	cout &lt;&lt; e &lt;&lt; '\n';RunOn insert an element std vector copies that value.Std vector does not check the range. For example:1int n = book[book.size()].number; // index is out of rangeRunWarn
+This code may not produce error, but fills the n with garbage. This is critical.
+There is a way to eliminate out-of-range problem with vector::at. Adaptor:1template &lt;typename T&gt;2class Vec: public std::vector&lt;T&gt; {3public:4	using vector&lt;T&gt;::vector; // use constructors from base5	T&amp; operator[](int i){return vector&lt;T&gt;::at(i);}6	const T&amp; operator[](int i) const {return vector&lt;T&gt;::at(i);}7};RunSome implementations save you the bother of defining adaptors (e.g., as a compiler option).A way to minimize surprises from uncaught exceptions:1int func()2try { // NO BODY. Immediate try-block3	book[book.size()] = {"Joe", 999999};4}5catch (out_of_range) {6	cerr &lt;&lt; "range error\n";7}8catch (...) {9	cerr &lt;&lt; "unknown exception thrown\n";10}RunList is double-linked.Every std container provides:
+begin() — returns iterator to the first element
+end() — returns iterator to the one-past-the-last element
+In fact
+Compiler realizes for-range with begin and end Traverse the list:1int get_number(const string&amp; s)2{3	for (auto p = book.begin(); p!=book.end(); ++p)4 if (p-&gt;name==s)5 return p-&gt;number;6	return -1; // as error7}RunInsertion and erasion are performed by iterator:1e = ... // some Entry obj2list&lt;Entry&gt;::iterator p = ...3list&lt;Entry&gt;::iterator q = ...45book.insert(p, e);6book.erase(q);RunInfo
+in C++: map is a red-black tree with asymptotic unordered_map is a hash-table with asymptotic Indexing [] of a map returns associated value or zero-value of a type. To avoid this behavior on missing elements you should use find() and insert().An example:1map&lt;string, int&gt; book{ // or unordered_map2	{"Dima", 635},3	{"Sasha", 900},4};RunStd lib provide default hash function for string. You can (and should) provide your own.<br><img alt="Screenshot 2025-10-02 at 01.51.27.png" src="a9s/screenshot-2025-10-02-at-01.51.27.png" target="_self" style="width: 600px; max-width: 100%;">Std lib provides adaptors: queue&lt;T&gt;, stack&lt;T&gt;, deque&lt;T&gt;, priority_queue&lt;T&gt;, and more specialized container-like types: array&lt;T, N&gt;, bitset&lt;N&gt;.Std containers have notational and semantical uniformity.Example for sort and unique:1bool operator&lt;(const Entry&amp; x, const Entry&amp; y)2{3	return x.name &lt; y.name;4}5void sort_and_unique(vector&lt;Entry&gt;&amp; vec, list&lt;Entry&gt;&amp; lst)6{7	sort(vec.begin(), vec.end());8	unique_copy(vec.begin(), vec.end(), lst.begin());9}RunCaution
+At this example you should know: unique_copy remove only adjacent equal elements, and lst must have enough space for insertion.
+Inserting in newly created collection can be realized with back_inserter:1list&lt;Entry&gt; getunique(vector&lt;Entry&gt;&amp; vec)2{3	list&lt;Entry&gt; res;4	sort(vec.begin(), vec.end());5	unique_copy(vec.begin(), vec.end(), back_inserter(res));6	return res;7}Runfind examples:1bool has_c(const string&amp; s, char c)2{3	auto p = find(s.begin(), s.end(), c);4	if (p!=s.end())5 return true;6	else7 return false;8}910// or11bool has_c(const string&amp; s, char c)12{13	return find(s.begin(), s.end(), c) != s.end();14}RunExample (UP: generalized) for find_all with STL:1template&lt;typename C, typename V&gt;2vector&lt;typename C::iterator&gt; find_all(C&amp; c, V c)3{4	vector&lt;typename C::iterator&gt; res;5	for (auto p = s.begin(); p!=s.end(); ++p)6 if (*p==c)7 res.push_bak(p);8	return res;9}RunWarn
+typename for reference to typename C::iterator is necessary. It informs the compiler that C's iterator is supposed to be a type and not a value of some type, say, the integer 7.
+We can hide this necessity by using type alias:1template &lt;typename T&gt;2using Iterator&lt;T&gt; = typename T::iterator;34template &lt;typename C, typename V&gt;5vector&lt;Iterator&lt;C&gt;&gt; find_all(C&amp; c, V v)6{7	vector &lt;Iterator&lt;C&gt;&gt; res;8	— || — ...9}RunWhen matches are found by find_all you can use insert(it, x) or erase(it) or do it manually:1vector&lt;string&gt; vs {"red", "green", "blue", "green"};2for (auto p: find_all(vs, "green")3	*p = "replaced";RunDon't pay attention to interior organization of iterator. Just know some agreements:
+.begin() and .end()
+p++ or p-- for move
+*p for access to element
+::iterator to get iterator, ::const_iterator to get iterator to immutable values
+Iterators find their application not only in interaction with collections. For example, stdin and stdout have "sequential work" too:1ostream_iterator&lt;string&gt; oo{cout};2int main()3{4	*oo = "Hello, ";5	++oo;6	*oo = "world!\n";7}Run1istream_iterator&lt;string&gt; ii{cin};2istream_iterator&lt;string&gt; eos{}; // to indicate EOF on ii == eosRunThese iterator types are not often used directly. It's a simple way to use them with std algorithms. For example:1/*2* read in-file, sort words, eliminate duplicates, write resutl to out-file3*/45int main()6{7	string from, to;8	cin &gt;&gt; from &gt;&gt; to;9	10	ifstream is{from}; // is an istream11	istream_iterator&lt;string&gt; ii{is};12	istream_iterator&lt;string&gt; eos{};1314	ofstream os{to}; // is an ostream15	ostream_iterator&lt;string&gt; oo{os, "\n"}; // delimiter1617	vector&lt;string&gt; b{ii, eos}; // init with iterators18	sort(b.begin(), b.end());1920	unique_copy(b.begin(), b.end(), oo);2122	return !is.eof() || !os;23}RunWe can shorten the program by using set (ordered, that uses red-black tree):1int main()2{3	string from, to;4	cin &gt;&gt; from &gt;&gt; to;56	ifstream is{from};7	ofstream os{to};89	set&lt;string&gt; b {10 istream_iterator&lt;string&gt;{is},11 istream_iterator&lt;string&gt;{},12	};13	copy(b.begin(), b.end(), ostream_iterator&lt;string&gt;{os, "\n"});1415	return !is.eof() || !os;16}RunExample for find:1struct GT { // for functor2	int val;3	Greater_than(int v): val{v} {}4	bool operator()(const pair&lt;string,int&gt;&amp; r){5 return r.second&gt;val;6	}7};89// usage:10map&lt;string, int&gt;&amp; m = ...;11auto p = find_if(m.gebin(), m.end(), GT{42});12// or with lambda:13int cx = count_if(m.begin(), m.end(),14	[](const pair&lt;string, int&gt;&amp; r){return r.second &gt; 42;}15);RunFeatures of algorithm:
+finiteness
+definiteness
+input
+output
+effectiveness
+<br><img alt="Screenshot 2025-10-02 at 23.54.37.png" src="a9s/screenshot-2025-10-02-at-23.54.37.png" target="_self" style="width: 600px; max-width: 100%;">You can provide shorthand for containers to avoid .begin()/.end() calls:1template &lt;class C&gt;2void sort(C&amp; c)3{4	sort(c.begon(), c.end());5}67template&lt;class C, class Pred&gt;8void sort(C&amp; c, Pred p)9{10	sort(c.begin(), c.end(), p);11}Run
+Use libraries! (Don't reinvent the wheel)
+Having choice, prefer std lib against others
+However, don't think std is ideal for everything
+Don't forget #include
+Don't forget std::
+Prefer string rather than cstring
+iostreams are type sensitive, type-safe, and extensible
+Prefer vector, map, and unordered_map
+Know concrete containers and their tradeoffs
+Use vector by default
+Prefer compact data structures
+If in doubt, use a range-checked vector (.at)
+Use push_back or back_inserter to add elements
+Use push_back on a vector rather than realloc() on an array
+Catch common exceptions in main()
+Prefer std algorithms rather than handwritten loops
+If iterator use gets tedious, define shorthand for container algorithm
+The main aim of the std library is not "everything for everyone". It aims to cover needs of intersection rather than union. That is, std library provides components that are useful to most people in most application areas.The most important aspect of good programs is resource management, and of course the std library is designed to not leak resources.Example, the technique is used for the std library lock classes:1mutex m;2void f()3{4	unique_lock&lt;mutex&gt; lck{m};5}RunNote
+unique_lock's destructor release the mutex when the thread of control leaves f() (either by return or by throw)
+This is an application of the RAII technique. This technique is fundamental to the idiomatic handling of resources in C++, and many std libs do so (containers, strings, iostreams and others).To help manage objects allocated on the free store (heap) std &lt;memory&gt; provides two "smart pointers":
+unique_ptr to represent unique ownership
+shared_ptr to represent shared ownership
+both use RAII
+Example of careless programming that may cause memory leaks:Bad code1void f(int i, int j)2{3	X* p = new X;4	unique_ptr&lt;X&gt; sp{new X};5	// ...6	if (i &lt; 99)7 throw Z{}; // leak by p8	if (j &lt; 77)9 return; // leak by p10	p-&gt;do_something();11	sp-&gt;do_something();12	// ...13	delete p;14}RunIronically, we could have solved the problem simply by not using a pointer and not using new.Smart pointers can be used for passing addresses in/out functions:1unique_ptr&lt;X&gt; make_X(int i)2{3	return unique_ptr&lt;X&gt;{new X{i}};4}RunInmportant
+On passing objects of smart pointer types we have:
+unique_ptr is moved
+shared_ptr is copied
+The object that is under shared_ptrs control is destroyed when last of its shared_ptrs is destroyed.
+Example:1void f(shared_ptr&lt;fstream&gt;);2void g(shared_ptr&lt;fstream&gt;);34void use(const string&amp; name, ios_base::openmode mode)5{6	shared_ptr&lt;fstream&gt; fp{new fstream(name, mode)};7	if (!*fp) throw No_file{};89	f(fp); // after return unique_ptr fp would be destroyed10	g(fp); // this call would be unavailable if fp were unique_ptr11	// ...12}RunUsage of smart pointer is neither cost free nor exorbitantly expensive.In fact, shared_ptrs do not in themselves provide any rules for which of their owners can read/write the shared object.Note
+The smart pointers don't solve data races and other form of confusion (it's not enough just eliminate the resource management issues).
+Not every time you should use smart pointers (e.g., there is no need when you use containers or thread). Smart pointers are needed when we need pointer semantics:
+we share an object (maybe with unique ownership)
+we refer to a polymorphic object (with unique or shared ownership)
+My own concurrency classification:1concurrency — several tasks simultaneously2	asynchronous — 1-2-1-2-1-23	parallelism - 12-12-124 multithreading - several threads5 multiprocessing - several processesWorth to note
+The std lib mostly supports system-level concurrency.
+It does not aim to directly provide sophisticated higher-level concurrency models.
+Even more interesting
+In fact, on lowest level C++ provides a suitable (for concurrency) memory model and a set of atomic operations — it is the basis of the concurrency.
+However, most users will see concurrency only in terms of the std lib and higher-level libs.
+Main std lib concurrency facilities:
+thread
+mutex
+lock()
+packaged_task
+future C++ concurrency std lib features do not incur performance penalties compared with operating system's offerings def
+task is a computation that can potentially be executed concurrently. In C++ it is function or functor.
+thread is the system-level representation of a task in a program.
+Example:1void f();23struct F{4	void operator()();5};67void use()8{9	thread t1{f}; // is launched immediately10	thread t2{F()}; // is launched immediately1112	t1.join(); // wait for finish13	t2.join();14}RunThreads can communicate through shared data, that is typically controlled by locks or other synchronization mechanism.Example of communication:Bad code
+Not synchronized cout
+1int main()2{3	thread t1{[](){cout &lt;&lt; "Hello world!\n";}};4	thread t2{[](){cout &lt;&lt; "Parallel World!\n";}};5	t1.join(); t2.join();6}RunOut is unpredictable!Our main aim in concurrent program is to keep tasks completely separate except where they communicate in simple and obvious way.1void f(vector&lt;double&gt; v);23struct F{4	vector&lt;double&gt;&amp; v;5	F(vector&lt;double&gt;&amp; vv) :v(vv) {}6	void operator()();7};89int main()10{11	vector&lt;double&gt; v1{1,2,3,4,5};12	vector&lt;double&gt; v2{6,7,8,9,0};13	thread t1{f, v1}; // copy of v114	thread t2{F{v2}}; // will work with original v215	t1.join(); t2.join();16}RunNote
+With thread t1{f, v1}; the compiler constructs the functor (as Stroustrup says) and stores a copy of v1. On the actual call in the thread, f is invoked with std::move of this copy. Therefore, for f's arguments (without templates and without std::ref), valid parameter types are: T (by value), const T&amp;, and T&amp;&amp;, but not T&amp;, since a true lvalue reference to the original object (and to its copy in thread) is never provided.
+For return you can pass the location of a place to deposit the result as a separate pointer argument. It is not a particularly elegant way.def
+mutex — mutual exclusion object
+1mutex m;2int sh;34void f()5{6	unique_lock&lt;mutex&gt; lck{m}; // call to m.lock()7	sh += 7;8} // mutex is released by unique_lock, call to m.unlock()RunCorrespondence based on convention (i.e., which mutex protects which data) — error-prone. A better way is to make it clear using various language mechanisms:1class Record{2public:3	mutex rm;4};RunTo avoid deadlock on acquiring many mutex std lib offers:1void f()2{3	unique_lock lck1{m1, defer_lock}; // defer_lock — special flag (emp str)4	unique_lock lck2{m2, defer_lock};5	unique_lock lck3{m3, defer_lock};6	lock(lck1, lck2, lck3); // smart algorithm to lock all three7} // release all three by unique_lockRunLocking and unlocking are relatively expensive operations. Do not choose shared data for communication between threads solely for "efficiency"; on modern machines, it can be faster to copy and pass data between threads. Always measure before assuming shared data is more efficient.
+The main idea is that you can allow you to copy data to create 2 independent copy for each thread, instead of using shared data.An chrono sleeping example:1using namespace std::chrono; // chrono is a namespace23auto t0 = high_resolution_clock::now();4this_thread::sleep_for(milliseconds{20}); // this_thread is a namespace5auto t1 = high_resolution_clock::now();6cout &lt;&lt; duration_cast&lt;nanoseconds&gt;(t1-t0).count()7	&lt;&lt; "nanoseconds passed\n";RunFor communicating with external events threads use conditional_variable (using it supports many forms of elegant and efficient sharing, but can be rather tricky). Example:1class Message {...};23queue&lt;Message&gt; q;4condition_variable cond;5mutex mtx;67void consumer()8{9	while(true){10 unique_lock&lt;mutex&gt; lck{mtx};11 cond.wait(lck, [](){return !q.empty();}); 12 // ^^^^^^^^^^^^^ release lock and wait signal, then reacquire13 auto m = q.front(); q.pop();14 lck.unlock();15 // process m16	}17}1819void producer()20{21	while(true){22 Message m = ...;23 unique_lock&lt;mutex&gt; lck{mtx};24 q.push(m);25 cond.notify_one();26	}27}Run<br>See working <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch5/prodcons.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch5/prodcons.cpp" target="_self">example</a>.The std lib provide a few facilities to allow higher-level of concurrency abstraction:
+future and promise
+packaged_task
+async()
+They are found in &lt;future&gt;.
+.get() on future may throw an exception (from the system, or transmitted from the task we try .get() from).Schematically:<br>
+<img style="max-width:400px; " class="excalidraw-svg excalidraw-embedded-img excalidraw-canvas-immersive is-unresolved" src="blob:/0c7bb108-ff0b-462f-8c5b-49e43e7a3771" filesource="a9s/2025.10.03.md" w="400" draggable="false" oncanvas="false" target="_self">Example to put in promise:1void f(promise&lt;X&gt;&amp; px)2{3	try {4 X res = ...; // compute res5 px.set_value(res);6	}7	catch (...) {8 px.set_exception(current_exception()); // lib func9	}10}RunExample to get future:1void g(future&lt;X&gt;&amp; fx)2{3	try {4 X v = fx.get();5 // use v...6	}7	catch (...) {8 // handle error...9	}10}RunThis type is provided to simplify setting up tasks connected with futures and promises to be run on threads.For example, consider how to accumulate vector by 2 halves:1double accum(double* beg, double* end, double init)2{3	return accumulate(beg, end, init);4}56double comp2(vector&lt;double&gt;&amp; v)7{8	using Task_type = double(double*,double*,double);910	packaged_task&lt;Task_type&gt; pt0{accum};11	packaged_task&lt;Task_type&gt; pt1{accum};12	future&lt;double&gt; f0 {pt0.get_future()};13	future&lt;double&gt; f1 {pt1.get_future()};1415	double* first = &amp;v[0];16	thread t1 {std::move(pt0), first, first+v.size()/2, 0};17	thread t2 {std::move(pt1), first+v.size()/2, first+v.size(), 0};18	return f0.get() + f1.get();19}RunNote
+We pass pt0/pt1 in threads by std::move because packaged_task cannot be copied!
+Btw, you should use explicit std:: for avoid compiler warn.
+The main idea of concurrency is to treat a task as a function that may happen to tun concurrently with other tasks (without more complicated work with shared data).Another way to run task potentially asynchronously:1double comp4(vector&lt;double&gt;&amp; v)2{3	auto sz = v.size();4	auto v0 = &amp;v[0], v1=v0+sz/4, v2=v0+sz/2, v3=v0+sz*3/4, v4=v0+sz;56	auto7 f0 = async(accum, v0, v1, 0.0),8 f1 = async(accum, v1, v2, 0.0),9 f2 = async(accum, v2, v3, 0.0),10 f3 = async(accum, v3, v4, 0.0);11	return f0.get()+f1.get()+f2.get()+f3.get();12}Run<br>See full <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch5/async.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch5/async.cpp" target="_self">example</a>.Warn
+Using async() you don't even know how many threads will be used, because this function observe available system resources. Don't even think of using async() for tasks that share resources needing locking. async() is not just for parallel computation (and increase performance). It can also be used to spawn a task for user-input, leaving "main thread" active with something else!
+There are not only "big" libs, such as containers or I/O.
+Other widely useful components are:
+clock, duration
+type functions (for gaining info about types), such as iterator_traits and is_arithmetic
+pair, tuple
+Use subnamespace std::chrono from &lt;chrono&gt;. Useful names:
+high_resolution_clock::now()
+duration_cast&lt;T&gt;(duration)
+Duration::count()
+def
+type function is a function that is evaluated at compile-time (takes type as arg, or returns one)
+Compile-time instruments are very efficient for final machine-code!Examples:1constexpr float min = numeric_limits&lt;float&gt;::min(); // from &lt;limits&gt;2constexpr int szi = sizeof(int);3static_assert(numeric_limits&lt;char&gt;::is_signed, "unsigned chars!");Rundef
+This style of programming is called metaprogramming or template metaprogramming (when templates are involved).
+Some algorithms take only random-access iterators (i.e., sort()), and others take forward iterators as well (i.e., for-range).
+So, we can realize universal sort function to sort container with any type of iterator (random-access or forward). It's convenient to use:1template &lt;class C&gt;2using Iterator_type = typename C::iterator;3template &lt;class IT&gt;4using Iterator_category = typename iterator_traits&lt;IT&gt;::iterator_category;5template &lt;class IT&gt;6using Value_type = typename iterator_traits&lt;IT&gt;::value_type;78template &lt;typename RI&gt; // random-access iterator9void sort_helper(RI beg, RI end, random_access_iterator_tag)10{11 sort(beg, end);12}1314template &lt;typename FI&gt; // forward iterator15void sort_helper(FI beg, FI end, forward_iterator_tag)16{17 vector&lt;Value_type&lt;FI&gt;&gt; v{beg, end};18 sort(v.begin(), v.end());19 copy(v.begin(), v.end(), beg);20}2122template &lt;typename C&gt;23void sort(C &amp;c)24{25 using Iter = Iterator_type&lt;C&gt;;26 sort_helper(c.begin(), c.end(), Iterator_category&lt;Iter&gt;{});27	// ^^^ here we use tag dispatch technique28}2930void test(vector&lt;string&gt; &amp;v, forward_list&lt;int&gt; &amp;lst)31{ sort(v); sort(lst); }RunNote
+decltype is inconvenient on line 17 because it yields int&amp; instead of int.
+<br>See full working <a data-tooltip-position="top" aria-label="file:///Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch5/unsort.cpp" rel="noopener nofollow" class="external-link is-unresolved" href="file:/Users/rayskiy7/dev/new_beginning/cpp/Stroustrup_cpp/ch5/unsort.cpp" target="_self">code</a>.def
+type predicate is a simple type function that answers a fundamental questions about type.
+&lt;type_traits&gt; provides:
+is_arithmetic, is_class, is_pod, is_literal_type, has_virtual_destructor, is_base_of and others.Example:1template&lt;typename T&gt;2constexpr bool Is_arithmetic()3{4	return is_arithmetic&lt;T&gt;::value; // contains true or false5}67// for simple variables:8bool b = Is_arithmetic&lt;int&gt;();910// for restricted type templates11template&lt;typename Scalar&gt;12class complex{13	Scalar re, im;14public:15	static_assert(Is_arithmetic&lt;Scalar&gt;(), "Arithmetic types only!!");16	// ...17};RunThey provides std realizations for many-values plain data objects.1#include &lt;utility&gt; // for type `pair` and others23vector&lt;Record&gt; v{...}; // sorted!4auto er = equal_range(v.begin(), v.end(), Record{"Reg"},5	[](const Record&amp; r1, const Record&amp; r2){return r1.name &lt; r2.name;}6) // returns pair7for (auto p = er.first; p != er.second; ++p)8	cout &lt;&lt; *p;910auto p = make_pair(Record{"Gabe"}, 398); // auto deduce types of elementsRun1tuple&lt;string, int, double&gt; t1("Sild", 123, 3.14);2auto t2 = make_tuple(string("Herring"), 10, 3.14);34// for access:5string s = get&lt;0&gt;(t);6int x = get&lt;1&gt;(t);7// a bit ugly syntax 😞RunHelpful
+Pairs and tuples can be assigned and compared (=, ==, &lt;) if their elements can be
+Raw string literal
+Starts with R"( and ends with )". Example: R"(\d{4}-\d{2}(-d{2})?)"
+1#include &lt;regex&gt;2regex pat{R"(\d{4}-\d{2}(-d{2})?)"};3int lineno = 0;4for (string line; getline(cin, line); ){5	++lineno;6	smatch matches; // smatch - s'match - sub matches7	if (regex_search(line, matches, pat))8 cout &lt;&lt; lineno &lt;&lt; ": " &lt;&lt; matches[0] &lt;&lt; '\n';9}RunIn &lt;cmath&gt; we find usual math functions.Useful utilities:1#include &lt;numeric&gt;2list&lt;double&gt; lst {...};3auto s = accumulate(lst.begin(), lst.end(), 0.0);RunFor complex&lt;ScalarT&gt; the most common math functions are supported, e.g.: +, sqrt, /, pow, and others.C++ std &lt;random&gt; consists of two parts:
+an engine that produces (pseudo) random values
+a distribution that maps those values into a mathematical distribution in a range
+Consider the following approach:1using engine = default_random_engine; // type of engine2using distribution = uniform_int_distribution&lt;&gt;; // type of distribution3// `int` is default type from definition ^^45engine re{random_device{}()};6distribution d1_6 {1, 6};7auto gen = bind(d1_6, re); // gen() ≈ d1_6(re)89cout &lt;&lt; gen() &lt;&lt; endl;RunFor more compact usage you can define your own class:1class Rand_int{2	default_random_engine re;3	uniform_int_distribution&lt;&gt; dist;4public:5	Rand_int(int low, int high)6 :dist{low, high}, re{random_device{}()} { }7	int operator()() { return dist(re); }8};910// then11Rand_int gen{0, 10};12gen(); // -&gt; ?RunFor vector arithmetic in C++ predefined valarray class that supports usual arithmetic operations and the most common mathematical functions. For example:1void f(valarray&lt;double&gt;&amp; a, valarray&lt;double&gt;&amp; b)2{3	valarray&lt;double&gt; c = a*3.14 + b/a;4	b += a*3.14;5	c = abs(c);6	double x = b[7];7	// ...8}Run
+Also valarray supports stride access (as python's slices) use RAII
+use unique_ptr for polymorphic type objects
+use shared_ptr to refer to shared objects
+use type-safe mechanisms for concurrency
+minimize the use of shared data
+don't choose shared data (between threads) because of naive "efficiency"
+think in terms of tasks, rather than threads
+a lib doesn't have to be large or complicated to be useful
+time your programs before making claims about efficiency
+you can write code to explicitly depend on properties of types
+use regex
+don't try serious numeric computation using only the language; use libs
+properties of numeric types are accessible through numeric_limits
+]]></description><link>stroustrup-b./tc++pl.-tome-1.html</link><guid isPermaLink="false">engineering/compendium/Stroustrup B./TC++PL. Tome 1.md</guid><pubDate>Sun, 28 Dec 2025 22:44:29 GMT</pubDate><enclosure url="." length="0" type="false"/><content:encoded>&lt;figure&gt;&lt;img src="."&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[🔸 Start page]]></title><description><![CDATA[This is selected collection of my book notes!
+👈🏼 All works can be found in the left side-bar]]></description><link>🔸-start-page.html</link><guid isPermaLink="false">engineering/compendium/🔸 Start page.md</guid><pubDate>Mon, 29 Dec 2025 14:01:44 GMT</pubDate></item></channel></rss>
