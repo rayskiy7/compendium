@@ -1,0 +1,57 @@
+<script>
+(function() {
+  // Функция для привязки copy к кнопке
+  function attachCopyButton(btn) {
+    if (btn.dataset.copyAttached) return; // не навешивать повторно
+    btn.dataset.copyAttached = "true";
+    btn.addEventListener("click", () => {
+      const codeBlock = btn.closest("pre")?.querySelector("code");
+      if (!codeBlock) return;
+
+      // Если есть строки code-styler, убираем номера
+      let code = "";
+      if (codeBlock.querySelector(".code-styler-line")) {
+        code = Array.from(codeBlock.querySelectorAll(".code-styler-line-text"))
+                    .map(line => line.innerText)
+                    .join("\n");
+      } else {
+        code = codeBlock.innerText;
+      }
+
+      navigator.clipboard.writeText(code).then(() => {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = "Copied!";
+        setTimeout(() => btn.innerHTML = originalHTML, 1000);
+      }).catch(err => console.error("Clipboard error:", err));
+    });
+  }
+
+  // Функция для добавления кнопки, если её нет
+  function addCopyButtons() {
+    document.querySelectorAll("pre").forEach(pre => {
+      let btn = pre.querySelector("button.copy-code-button");
+      if (!btn) {
+        btn = document.createElement("button");
+        btn.className = "copy-code-button";
+        btn.innerText = "Copy";
+        btn.style.position = "absolute";
+        btn.style.top = "4px";
+        btn.style.right = "4px";
+        btn.style.padding = "2px 6px";
+        btn.style.fontSize = "0.8em";
+        btn.style.cursor = "pointer";
+        pre.style.position = "relative";
+        pre.appendChild(btn);
+      }
+      attachCopyButton(btn);
+    });
+  }
+
+  // MutationObserver для динамически добавляемых блоков
+  const observer = new MutationObserver(addCopyButtons);
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Сразу обрабатываем уже существующие блоки
+  document.addEventListener("DOMContentLoaded", addCopyButtons);
+})();
+</script>
